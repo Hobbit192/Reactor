@@ -1,6 +1,9 @@
 import pygame
 import sys
 
+from constants import alpha
+from nuclei import Coolant
+
 # Initialize Pygame
 pygame.init()
 
@@ -30,29 +33,52 @@ GREY = (200, 200, 200)
 screen = pygame.display.set_mode((width, height))
 pygame.display.set_caption("Reactor")
 
-# Function to draw the grid
+def heat_transfer(grid, i, j):
+    current_temp = grid[i][j]
+
+    conduction = alpha * (grid[i+1][j] + grid[i-1][j] + grid[i][j+1] + grid[i][j-1] - 4 * current_temp)
+
+    convection = (1 - F) * current_temp + (F / 4) * (grid[i+1][j] + grid[i-1][j] + grid[i][j+1] + grid[i][j-1])
+
+    if neutron_collision:
+        pass
+
+    dT = conduction + convection + fuel_rod_transfer + neutron_heating
+    return dT
+
+coolant_grid = []
+
+# Each coolant square can be accessed by its position in the array
+for x in range(columns):
+    coolant_grid.append([])
+    for y in range(rows):
+        coolant_grid[x].append(Coolant(21))
+
+
+
+
+
+
 def draw_grid():
     for row in range(rows):
         for col in range(columns):
             x = gap + col * (square_width + square_gap)
             y = vertical_gap + row * (square_height + square_gap)
             rect = pygame.Rect(x, y, square_width, square_height)
-            pygame.draw.rect(screen, GREY, rect)  # Fill the square with grey
+            pygame.draw.rect(screen, GREY, rect)
 
 # Main loop
 running = True
 while running:
-    screen.fill(WHITE)  # Fill the background with white
-    draw_grid()  # Draw the grid
+    screen.fill(WHITE)
+    draw_grid()
 
     # Event handling
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
 
-    # Update the display
     pygame.display.flip()
 
-# Quit Pygame
 pygame.quit()
 sys.exit()
