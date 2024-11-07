@@ -2,15 +2,21 @@
 ## How to use the program
 WIP
 ## Methodology
+### Fission, Fuel Rods and Neutrons
+Fission is modelled at a macroscopic scale in order to represent the reactivity of the reactor as a whole. The coolant grid of squares has a grid of circles overlaid on top of it, with each circle representing a large amount of nuclei all acting together. This circle is coloured differently depending on whether the nuclei are uranium, the daughter nuclei of fission or xenon. The daughter nuclei are all coloured the same and for simplicity, the decay heating produced by the decay of daughter nuclei is ignored. This might be added at a later date, as it would allow simulation of the Fukushima and Three Mile Island accidents.
+
+Neutrons are represented as smaller circles that can move continuously across the entire screen. Each neutron represents a group of neutrons, and so when a neutron collides with a uranium circle, it has the possibility of undergoing fission. This is dependent on the speed of the neutron: fast neutrons will also be modelled, and can be slowed down by the graphite moderators. All neutrons produced from fission will begin as fast neutrons and will travel in random directions. Fast neutrons will also have a greater heating effect on the water, although they can be moderated and slowed down by the water until they become thermal neutrons. Fast neutrons have a much lower chance of inducing fission.
+
+The values for nuclear cross-sections for this project were obtained from SOURCE.
 ### Heat Transfer
 When modelling heat transfer in this project, several things are taken into account. In the coolant system, it is necessary to firstly consider
 heat transfer by **conduction** between adjacent squares of coolant on the grid. This is achieved by **Fourier's law of heat conduction**:
 ```math
 \frac{\partial T}{\partial t} = \alpha \nabla^2 T
 ```
-In a disrete form, used in our grid of sqaures simplification, this becomes:
+In a discrete form, used in our grid of sqaures simplification, this becomes:
 ```math
-\text{Conduction} = \alpha \cdot \Delta t \cdot [T(i+1, j)+T(i, j+1)+T(i, j-1) - 4 \cdot T(i, j)],
+\text{Conduction} = \alpha \cdot \Delta t \cdot [T(i+1, j) + T(i-1, j) + T(i, j+1) +T (i, j-1) - 4 \cdot T(i, j)],
 ```
 where $\alpha$ is the thermal diffusivity of the fluid, which is calculated by:
 ```math
@@ -38,9 +44,9 @@ T(i, j) = T(i, j) + k \cdot [T_{Fuel rod} - T(i, j)],
 ```
 where k is the heat transfer coefficient. The value of k is usually experimentally determined, as it is difficult to calculate. In this program, it is taken as $5000W/(m^2 \cdot K)$. Several simplifications are made in this system: the fuel rods are of a uniform temperature, internal conduction in the fuel rods is ignored, heat transfer is considered to be instantaneous and the value of k is presumed to remain constant.
 
-The last consideration is the heating produced by the moderation and absorbtion of neutrons. In an RBMK reactor, graphite is the primary moderator, but light water also served to slow down and absorb neutrons. While in the rest of the program, the neutrons represent only 1 neutron, in the specific case of heating water, they are considered to represent multiple, in order to maintain a more accurate effect. This calculation is based on the energy of the neutron:
+The last consideration is the heating produced by the moderation and absorbtion of neutrons. In an RBMK reactor, graphite is the primary moderator, but light water also serves to slow down and absorb neutrons. While in the rest of the program, the neutrons represent only 1 neutron, in the specific case of heating water, they are considered to represent multiple, in order to maintain a more accurate effect. This calculation is based on the energy of the neutron:
 ```math
-T(i, j) += N \cdot \frac{E_{neutron}}{m_{coolant} \cdot C_p},
+T(i, j) = T(i, j) + N \cdot \frac{E_{neutron}}{m_{coolant} \cdot C_p},
 ```
 where N is the number of neutrons represented, functioning as a scaling factor for the heating.
 
