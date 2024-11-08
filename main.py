@@ -1,37 +1,34 @@
 import pygame
 import sys
 
-from constants import alpha
-from nuclei import Coolant
+from constants import alpha, WHITE, GREY, LIGHT_GREY
+from nuclei import Coolant, neutrons, all_sprites_list
 
 # Initialize Pygame
 pygame.init()
 
 # Screen dimensions
 info = pygame.display.Info()
-width, height = info.current_w - 10, info.current_h - 100  # Width and height of the window (full screen)
-gap = 50  # Gap between the window edge and the grid
-rows, columns = 20, 40  # Number of rows and columns for the grid (adjusted to make the grid rectangular)
+width, height = info.current_w - 10, info.current_h - 100
+
+gap = 50
+rows, columns = 25, 50
 
 # Calculate square size ensuring they fit perfectly within the window with gaps
-available_width = width - 2 * gap - (columns - 1) * 5  # Total width available for squares (excluding gaps between squares)
-available_height = height - 2 * gap - (rows - 1) * 5  # Total height available for squares (excluding gaps between squares)
+available_width = width - (2 * gap) - (columns - 1) * 5  # Total width available for squares (excluding gaps between squares)
+available_height = height - (2 * gap) - (rows - 1) * 5  # Total height available for squares (excluding gaps between squares)
 square_width = available_width // columns  # Width of each square
 square_height = available_height // rows  # Height of each square
-square_gap = 5  # Gap between squares
+square_gap = 5
 
 # Adjust gap to ensure grid is centered vertically
 grid_height = rows * square_height + (rows - 1) * square_gap
 vertical_gap = (height - grid_height) // 2
 
-# Colors
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-GREY = (200, 200, 200)
-
 # Set up the display
 screen = pygame.display.set_mode((width, height))
-pygame.display.set_caption("Reactor")
+coolant_surface = pygame.Surface((width, height))
+pygame.display.set_caption("Nuclear Reactor")
 
 def heat_transfer(grid, i, j):
     current_temp = grid[i][j]
@@ -49,14 +46,10 @@ def heat_transfer(grid, i, j):
 coolant_grid = []
 
 # Each coolant square can be accessed by its position in the array
-for x in range(columns):
+for i in range(columns):
     coolant_grid.append([])
-    for y in range(rows):
-        coolant_grid[x].append(Coolant(21))
-
-
-
-
+    for j in range(rows):
+        coolant_grid[i].append(Coolant(21))
 
 
 def draw_grid():
@@ -65,19 +58,29 @@ def draw_grid():
             x = gap + col * (square_width + square_gap)
             y = vertical_gap + row * (square_height + square_gap)
             rect = pygame.Rect(x, y, square_width, square_height)
-            pygame.draw.rect(screen, GREY, rect)
+            pygame.draw.rect(screen, LIGHT_GREY, rect)
 
-# Main loop
+# ------------------------------------- Main loop ----------------------------------------------------------------------
+clock = pygame.time.Clock()
+
 running = True
 while running:
     screen.fill(WHITE)
     draw_grid()
+
+    time_delta = clock.tick(75)/1000
 
     # Event handling
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
 
+    # Game state updates
+    for neutron in neutrons:
+        neutron.move(time_delta)
+        neutron.sprite.set_pos(neutron.position)
+
+    all_sprites_list.draw(screen)
     pygame.display.flip()
 
 pygame.quit()
