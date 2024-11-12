@@ -38,8 +38,6 @@ class Neutron:
         self.sprite = Sprite(DARK_GREY, 8)
         all_sprites_list.add(self.sprite)
 
-        neutrons.append(self)
-
     def draw(self):
         if self.fast:
             pass
@@ -57,9 +55,6 @@ class FuelRod:
     def __init__(self, temperature):
         self.temperature = temperature
 
-    def fission(self):
-        pass
-
 class Xenon:
     pass
 
@@ -70,3 +65,4 @@ all_sprites_list = pygame.sprite.Group()
 neutrons = []
 
 test = Neutron(Vector(0, 0), Vector(500, 500), False)
+neutrons.append(test)
