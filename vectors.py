@@ -24,7 +24,6 @@ class Vector:
     def dot(self, other):
         return self.x * other.x + self.y * other.y
 
-
     def rotate(self, angle):
         angle = radians(angle)
         return Vector(self.x * cos(angle) - self.y * sin(angle), self.x * sin(angle) + self.y * cos(angle))
