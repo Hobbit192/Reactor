@@ -3,7 +3,7 @@ import sys
 import random
 
 from constants import alpha, WHITE, GREY, LIGHT_GREY, LIGHT_BLUE
-from nuclei import Coolant, neutrons, all_sprites_list, FuelRod, FissionProduct
+from nuclei import Coolant, neutrons, all_sprites_list, FuelRod, FissionProduct, Neutron
 from vectors import Vector
 
 # Initialize Pygame
@@ -31,6 +31,7 @@ row_height = square_size + gap
 
 total_columns = int((width - 2 * border_gap - gap) / (square_size + gap))
 total_rows = int(total_columns / aspect_ratio)
+print(total_columns, total_rows)
 
 total_grid_width = (total_columns * square_size) + (gap * (total_columns - 1))
 total_grid_height = (total_rows * square_size) + (gap * (total_rows - 1))
@@ -95,8 +96,12 @@ while running:
             if isinstance(nuclei_grid[column][row], FissionProduct):
                 pygame.draw.circle(screen, GREY, (nuclei_x, nuclei_y), nucleus_diameter // 2)
 
+            new_fuel = random.randint(1, 1000)
+
+            if new_fuel == 1:
+                nuclei_grid[column][row] = FuelRod(21)
+
     time_delta = clock.tick(60)/1000
-    print(clock.get_fps())
 
     # Event handling
     for event in pygame.event.get():
@@ -104,23 +109,37 @@ while running:
             running = False
 
     # Game state updates
+    # Neutron handling
     for neutron in neutrons:
         neutron.move(time_delta)
 
-        neutron_column = int((neutron.position.x + 74) // column_width)
-        neutron_row = int((neutron.position.y + 74) // row_height)
+        neutron_column = int((neutron.position.x - start_x) // column_width)
+        neutron_row = int((neutron.position.y - start_y) // row_height)
 
-        nucleus_position = Vector(neutron_column * column_width + (column_width // 2),
-                                  neutron_row * column_width + (column_width // 2))
+        if (neutron.position.x < 0 or neutron.position.x > width or
+                neutron.position.y < 0 or neutron.position.y > height):
+            neutrons.remove(neutron)
+            neutron.sprite.kill()
+            continue
 
-        separation = neutron.position - nucleus_position
+        if 0 <= neutron_column < total_columns and 0 <= neutron_row < total_rows:
 
-        if ((separation.magnitude() < nucleus_diameter / 2 + neutron.sprite.pixel_radius)
-                and isinstance(nuclei_grid[neutron_column][neutron_row], FuelRod)):
-            nuclei_grid[neutron_column][neutron_row] = FissionProduct()
-            neutron.velocity = Vector(0, 0)
+            nucleus_position = Vector(neutron_column * column_width + (column_width // 2) + start_x,
+                                      neutron_row * column_width + (column_width // 2) + start_y)
 
-        #if
+            separation = neutron.position - nucleus_position
+
+            if ((separation.magnitude() < nucleus_diameter / 2 + neutron.sprite.pixel_radius)
+                    and isinstance(nuclei_grid[neutron_column][neutron_row], FuelRod)):
+                nuclei_grid[neutron_column][neutron_row] = FissionProduct()
+
+                neutrons.remove(neutron)
+                neutron.sprite.kill()
+
+                for i in range(3):
+                    angle = random.randint(0, 360)
+                    new_neutron = Neutron(nucleus_position, Vector(500, 500).rotate(angle), False)
+                    neutrons.append(new_neutron)
 
         neutron.sprite.set_pos(neutron.position)
 
