@@ -1,6 +1,6 @@
 import pygame
 
-from constants import m_neutron, WHITE, GREY
+from constants import m_neutron, WHITE, DARK_GREY
 from vectors import Vector
 
 
@@ -25,9 +25,6 @@ class Coolant:
     def __init__(self, temperature):
         self.temperature = temperature
 
-    def draw(self):
-        pass
-
     def collision_check(self):
         pass
 
@@ -38,7 +35,7 @@ class Neutron:
         self.fast = fast
         self.speed = velocity.magnitude()
 
-        self.sprite = Sprite(GREY, 8)
+        self.sprite = Sprite(DARK_GREY, 8)
         all_sprites_list.add(self.sprite)
 
         neutrons.append(self)
@@ -57,8 +54,17 @@ class Neutron:
         return 0.5 * m_neutron * (self.velocity ** 2)
 
 class FuelRod:
+    def __init__(self, temperature):
+        self.temperature = temperature
+
     def fission(self):
         pass
+
+class Xenon:
+    pass
+
+class FissionProduct:
+    pass
 
 all_sprites_list = pygame.sprite.Group()
 neutrons = []

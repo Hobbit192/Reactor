@@ -1,8 +1,10 @@
 import pygame
 import sys
+import random
 
-from constants import alpha, WHITE, GREY, LIGHT_GREY
-from nuclei import Coolant, neutrons, all_sprites_list
+from constants import alpha, WHITE, GREY, LIGHT_GREY, LIGHT_BLUE
+from nuclei import Coolant, neutrons, all_sprites_list, FuelRod, FissionProduct
+from vectors import Vector
 
 # Initialize Pygame
 pygame.init()
@@ -11,24 +13,53 @@ pygame.init()
 info = pygame.display.Info()
 width, height = info.current_w - 10, info.current_h - 100
 
-gap = 50
-rows, columns = 25, 50
-
-# Calculate square size ensuring they fit perfectly within the window with gaps
-available_width = width - (2 * gap) - (columns - 1) * 5  # Total width available for squares (excluding gaps between squares)
-available_height = height - (2 * gap) - (rows - 1) * 5  # Total height available for squares (excluding gaps between squares)
-square_width = available_width // columns  # Width of each square
-square_height = available_height // rows  # Height of each square
-square_gap = 5
-
-# Adjust gap to ensure grid is centered vertically
-grid_height = rows * square_height + (rows - 1) * square_gap
-vertical_gap = (height - grid_height) // 2
-
 # Set up the display
 screen = pygame.display.set_mode((width, height))
 coolant_surface = pygame.Surface((width, height))
 pygame.display.set_caption("Nuclear Reactor")
+
+# Coolant grid setup
+coolant_grid = []
+
+aspect_ratio = width / height
+border_gap = 70
+gap = 4
+square_size = 40
+
+column_width = square_size + gap
+row_height = square_size + gap
+
+total_columns = int((width - 2 * border_gap - gap) / (square_size + gap))
+total_rows = int(total_columns / aspect_ratio)
+
+total_grid_width = (total_columns * square_size) + (gap * (total_columns - 1))
+total_grid_height = (total_rows * square_size) + (gap * (total_rows - 1))
+
+start_x = (width - total_grid_width) // 2
+start_y = (height - total_grid_height) // 2
+
+# Each coolant square can be accessed by its position in the array
+for col in range(total_columns):
+    coolant_grid.append([])
+    for row in range(total_rows):
+        coolant_square = Coolant(21)
+        coolant_grid[col].append(coolant_square)
+
+# Nuclei grid setup
+nuclei_grid = []
+
+nucleus_diameter = int(square_size * 0.7)
+
+for col in range(total_columns):
+    nuclei_grid.append([])
+    for row in range(total_rows):
+        if random.randint(1, 10) == 1:
+            uranium = FuelRod(21)
+            nuclei_grid[col].append(uranium)
+
+        else:
+            nucleus = FissionProduct()
+            nuclei_grid[col].append(nucleus)
 
 def heat_transfer(grid, i, j):
     current_temp = grid[i][j]
@@ -43,32 +74,29 @@ def heat_transfer(grid, i, j):
     dT = conduction + convection + fuel_rod_transfer + neutron_heating
     return dT
 
-coolant_grid = []
-
-# Each coolant square can be accessed by its position in the array
-for i in range(columns):
-    coolant_grid.append([])
-    for j in range(rows):
-        coolant_grid[i].append(Coolant(21))
-
-
-def draw_grid():
-    for row in range(rows):
-        for col in range(columns):
-            x = gap + col * (square_width + square_gap)
-            y = vertical_gap + row * (square_height + square_gap)
-            rect = pygame.Rect(x, y, square_width, square_height)
-            pygame.draw.rect(screen, LIGHT_GREY, rect)
-
 # ------------------------------------- Main loop ----------------------------------------------------------------------
 clock = pygame.time.Clock()
 
 running = True
 while running:
     screen.fill(WHITE)
-    draw_grid()
+    for column in range(total_columns):
+        for row in range(total_rows):
+            coolant_x = start_x + column * (square_size + gap)
+            coolant_y = start_y + row * (square_size + gap)
+            pygame.draw.rect(screen, LIGHT_GREY, (coolant_x, coolant_y, square_size, square_size))
 
-    time_delta = clock.tick(75)/1000
+            nuclei_x = start_x + column * (square_size + gap) + square_size // 2
+            nuclei_y = start_y + row * (square_size + gap) + square_size // 2
+
+            if isinstance(nuclei_grid[column][row], FuelRod):
+                pygame.draw.circle(screen, LIGHT_BLUE, (nuclei_x, nuclei_y), nucleus_diameter // 2)
+
+            if isinstance(nuclei_grid[column][row], FissionProduct):
+                pygame.draw.circle(screen, GREY, (nuclei_x, nuclei_y), nucleus_diameter // 2)
+
+    time_delta = clock.tick(60)/1000
+    print(clock.get_fps())
 
     # Event handling
     for event in pygame.event.get():
@@ -78,6 +106,22 @@ while running:
     # Game state updates
     for neutron in neutrons:
         neutron.move(time_delta)
+
+        neutron_column = int((neutron.position.x + 74) // column_width)
+        neutron_row = int((neutron.position.y + 74) // row_height)
+
+        nucleus_position = Vector(neutron_column * column_width + (column_width // 2),
+                                  neutron_row * column_width + (column_width // 2))
+
+        separation = neutron.position - nucleus_position
+
+        if ((separation.magnitude() < nucleus_diameter / 2 + neutron.sprite.pixel_radius)
+                and isinstance(nuclei_grid[neutron_column][neutron_row], FuelRod)):
+            nuclei_grid[neutron_column][neutron_row] = FissionProduct()
+            neutron.velocity = Vector(0, 0)
+
+        #if
+
         neutron.sprite.set_pos(neutron.position)
 
     all_sprites_list.draw(screen)
