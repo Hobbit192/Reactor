@@ -1,6 +1,6 @@
 import pygame
 
-from constants import m_neutron, WHITE, DARK_GREY
+from constants import m_neutron, WHITE, DARKER_GREY
 from vectors import Vector
 
 
@@ -35,7 +35,7 @@ class Neutron:
         self.fast = fast
         self.speed = velocity.magnitude()
 
-        self.sprite = Sprite(DARK_GREY, 8)
+        self.sprite = Sprite(DARKER_GREY, 7)
         all_sprites_list.add(self.sprite)
 
     def draw(self):
@@ -61,8 +61,11 @@ class Xenon:
 class FissionProduct:
     pass
 
+class ControlRod:
+    pass
+
 all_sprites_list = pygame.sprite.Group()
 neutrons = []
 
-test = Neutron(Vector(0, 0), Vector(500, 500), False)
-neutrons.append(test)
+starter = Neutron(Vector(0, 0), Vector(300, 300), False)
+neutrons.append(starter)
