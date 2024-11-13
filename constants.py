@@ -9,6 +9,7 @@ fission_heat = fission_energy * number * 0.9
 
 # Colours
 WHITE = (255, 255, 255)
+DARKER_GREY = (25, 25, 25)
 DARK_GREY = (86, 86, 86)
 GREY = (150, 150, 150)
 LIGHT_GREY = (200, 200, 200)
