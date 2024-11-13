@@ -2,8 +2,8 @@ import pygame
 import sys
 import random
 
-from constants import alpha, WHITE, GREY, LIGHT_GREY, LIGHT_BLUE
-from nuclei import Coolant, neutrons, all_sprites_list, FuelRod, FissionProduct, Neutron
+from constants import alpha, WHITE, GREY, LIGHT_GREY, LIGHT_BLUE, PURPLE
+from nuclei import Coolant, neutrons, all_sprites_list, FuelRod, FissionProduct, Neutron, Xenon
 from vectors import Vector
 
 # Initialize Pygame
@@ -23,8 +23,8 @@ coolant_grid = []
 
 aspect_ratio = width / height
 border_gap = 70
-gap = 4
-square_size = 40
+gap = 3
+square_size = 30
 
 column_width = square_size + gap
 row_height = square_size + gap
@@ -63,7 +63,7 @@ for col in range(total_columns):
             nuclei_grid[col].append(nucleus)
 
 def heat_transfer(grid, i, j):
-    current_temp = grid[i][j]
+    current_temp = grid[i][j].temperature
 
     conduction = alpha * (grid[i+1][j] + grid[i-1][j] + grid[i][j+1] + grid[i][j-1] - 4 * current_temp)
 
@@ -96,10 +96,17 @@ while running:
             if isinstance(nuclei_grid[column][row], FissionProduct):
                 pygame.draw.circle(screen, GREY, (nuclei_x, nuclei_y), nucleus_diameter // 2)
 
+            if isinstance(nuclei_grid[column][row], Xenon):
+                pygame.draw.circle(screen, PURPLE, (nuclei_x, nuclei_y), nucleus_diameter // 2)
+
             new_fuel = random.randint(1, 1000)
+            xenon_production = random.randint(1, 5000)
 
             if new_fuel == 1:
                 nuclei_grid[column][row] = FuelRod(21)
+
+            if xenon_production == 1:
+                nuclei_grid[column][row] = Xenon()
 
     time_delta = clock.tick(60)/1000
 
@@ -129,17 +136,23 @@ while running:
 
             separation = neutron.position - nucleus_position
 
-            if ((separation.magnitude() < nucleus_diameter / 2 + neutron.sprite.pixel_radius)
-                    and isinstance(nuclei_grid[neutron_column][neutron_row], FuelRod)):
-                nuclei_grid[neutron_column][neutron_row] = FissionProduct()
+            if separation.magnitude() < nucleus_diameter / 2 + neutron.sprite.pixel_radius:
+                if isinstance(nuclei_grid[neutron_column][neutron_row], FuelRod):
+                    nuclei_grid[neutron_column][neutron_row] = FissionProduct()
 
-                neutrons.remove(neutron)
-                neutron.sprite.kill()
+                    neutrons.remove(neutron)
+                    neutron.sprite.kill()
 
-                for i in range(3):
-                    angle = random.randint(0, 360)
-                    new_neutron = Neutron(nucleus_position, Vector(500, 500).rotate(angle), False)
-                    neutrons.append(new_neutron)
+                    for i in range(3):
+                        angle = random.randint(0, 360)
+                        new_neutron = Neutron(nucleus_position, Vector(300, 300).rotate(angle), False)
+                        neutrons.append(new_neutron)
+
+                if isinstance(nuclei_grid[neutron_column][neutron_row], Xenon):
+                    nuclei_grid[neutron_column][neutron_row] = FissionProduct()
+
+                    neutrons.remove(neutron)
+                    neutron.sprite.kill()
 
         neutron.sprite.set_pos(neutron.position)
 
