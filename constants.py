@@ -1,6 +1,8 @@
 # Constants
-alpha = 10
+c_p = 0
+rho = 0
 k = 5000
+alpha = 10
 m_neutron = 1.674927471e-27
 number = 2000
 
@@ -11,6 +13,7 @@ fission_heat = fission_energy * number * 0.9
 WHITE = (255, 255, 255)
 DARKER_GREY = (25, 25, 25)
 DARK_GREY = (86, 86, 86)
+MID_DARK_GREY = (100, 100, 100)
 GREY = (150, 150, 150)
 LIGHT_GREY = (200, 200, 200)
 LIGHT_BLUE = (124, 180, 184)
