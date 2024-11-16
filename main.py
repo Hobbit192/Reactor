@@ -69,7 +69,9 @@ rod_width = 0.25 * square_size + gap
 rod_height = row_height * total_rows - gap
 
 for rod in range(total_rods):
-    control_rods.append(ControlRod(random.randint(0, 100)))
+    control_rods.append(ControlRod(50))
+
+control_rods[0].descent = 0
 
 
 def heat_transfer(grid, i, j):
@@ -130,7 +132,7 @@ while running:
     for rod in range(total_rods):
         rod_x = start_x + rod * (square_size + gap) * 4 - rod_width / 2
         pygame.draw.rect(screen, MID_DARK_GREY,
-                         (rod_x, start_y - rod_height * control_rods[rod].descent // 100, rod_width, rod_height))
+                         (rod_x, 0, rod_width, start_y + rod_height * control_rods[rod].descent // 100 ))
 
     time_delta = clock.tick(60) / 1000
 
@@ -147,26 +149,50 @@ while running:
         neutron_column = int((neutron.position.x - start_x) // column_width)
         neutron_row = int((neutron.position.y - start_y) // row_height)
 
-        rod_gap = neutron_column // 4
 
-        buffer_right_x = start_x + rod_gap * (square_size + gap) * 4 + rod_width / 2
-        buffer_right = pygame.Rect(buffer_right_x, 0,
-                                   neutron.sprite.pixel_radius,
-                                   start_y + rod_height * control_rods[rod_gap].descent / 100)
+        #check neutrol collision with left rod
 
-        buffer_down_x = start_x + rod_gap * (square_size + gap) * 4 - rod_width / 2
-        buffer_down_y = start_y + rod_height * control_rods[rod_gap].descent / 100
-        buffer_down = pygame.Rect(buffer_down_x, buffer_down_y, rod_width, neutron.sprite.pixel_radius)
+        left_rod = neutron_column//4
 
-        buffer_left_x =
+        left_rod_x = start_x + left_rod * (square_size + gap) * 4 - rod_width / 2
+
+        x_closest = min(neutron.position.x, left_rod_x + rod_width)
+        y_closest = min(neutron.position.y, start_y + rod_height*control_rods[left_rod].descent // 100)
+
+        # Compute the distance from the circle center to the closest point
+        dx = x_closest - neutron.position.x
+        dy = y_closest - neutron.position.y
+        distance_squared = dx * dx + dy * dy
+
+        if distance_squared < neutron.sprite.pixel_radius ** 2:
+            neutrons.remove(neutron)
+            neutron.sprite.kill()
+            continue
+
+        right_rod = neutron_column // 4 + 1
+
+        right_rod_x = start_x + right_rod * (square_size + gap) * 4 - rod_width / 2
+
+        x_closest = max(right_rod_x, min(neutron.position.x, right_rod_x + rod_width))
+        y_closest = max(0, min(neutron.position.y, start_y + rod_height * control_rods[right_rod].descent // 100))
+
+        # Compute the distance from the circle center to the closest point
+        dx = x_closest - neutron.position.x
+        dy = y_closest - neutron.position.y
+        distance_squared = dx * dx + dy * dy
+
+        if distance_squared < neutron.sprite.pixel_radius ** 2:
+            neutrons.remove(neutron)
+            neutron.sprite.kill()
+            continue
+
+
 
         if (neutron.position.x < 0 or neutron.position.x > width or
                 neutron.position.y < 0 or neutron.position.y > height):
             neutrons.remove(neutron)
             neutron.sprite.kill()
             continue
-
-        elif rod_gap
 
         elif 0 <= neutron_column < total_columns and 0 <= neutron_row < total_rows:
 

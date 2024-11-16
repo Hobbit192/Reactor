@@ -79,5 +79,5 @@ class Moderator:
 all_sprites_list = pygame.sprite.Group()
 neutrons = []
 
-starter = Neutron(Vector(70, 0), Vector(300, 300), False)
+starter = Neutron(Vector(0, 500), Vector(300, 300), False)
 neutrons.append(starter)
