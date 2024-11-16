@@ -64,8 +64,11 @@ class FissionProduct:
 class ControlRod:
     pass
 
+class Moderator:
+    pass
+
 all_sprites_list = pygame.sprite.Group()
 neutrons = []
 
-starter = Neutron(Vector(0, 0), Vector(300, 300), False)
+starter = Neutron(Vector(70, 0), Vector(300, 300), False)
 neutrons.append(starter)
