@@ -63,13 +63,13 @@ for col in range(total_columns):
 
 # Control rod setup
 control_rods = []
+total_rods = (total_columns - 1) // 3 + 1
 
 rod_width = 0.25 * square_size + gap
 rod_height = row_height * total_rows - gap
 
-for rod in range((total_columns - 1) // 3 + 1):
-    control_rod = ControlRod()
-    control_rods.append(control_rod)
+for rod in range(total_rods):
+    control_rods.append(ControlRod(random.randint(0,100)))
 
 def heat_transfer(grid, i, j):
     current_temp = grid[i][j].temperature
@@ -123,9 +123,10 @@ while running:
                 nuclei_grid[column][row] = Xenon()
 
     # Control rod drawing
-    for column in range(0, total_columns, 4):
-        rod_x = start_x + column * (square_size + gap) - rod_width / 2
-        pygame.draw.rect(screen, MID_DARK_GREY, (rod_x, start_y, rod_width, rod_height))
+    for rod in range(total_rods):
+        rod_x = start_x + rod * (square_size + gap) * 4 - rod_width / 2
+        pygame.draw.rect(screen, MID_DARK_GREY,
+                         (rod_x, start_y - rod_height * control_rods[rod].descent // 100, rod_width, rod_height))
 
     time_delta = clock.tick(60)/1000
 
@@ -136,6 +137,7 @@ while running:
 
     # Game state updates
     # Neutron handling
+
     for neutron in neutrons:
         neutron.move(time_delta)
 

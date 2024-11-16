@@ -62,7 +62,8 @@ class FissionProduct:
     pass
 
 class ControlRod:
-    pass
+    def __init__(self, descent=0):
+        self.descent = descent
 
 class Moderator:
     pass
