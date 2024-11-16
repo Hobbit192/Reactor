@@ -21,12 +21,14 @@ class Sprite(pygame.sprite.Sprite):
         self.rect.x = position.x - self.pixel_radius
         self.rect.y = position.y - self.pixel_radius
 
+
 class Coolant:
     def __init__(self, temperature):
         self.temperature = temperature
 
     def collision_check(self):
         pass
+
 
 class Neutron:
     def __init__(self, position, velocity, fast):
@@ -51,22 +53,28 @@ class Neutron:
     def energy(self):
         return 0.5 * m_neutron * (self.velocity ** 2)
 
+
 class FuelRod:
     def __init__(self, temperature):
         self.temperature = temperature
 
+
 class Xenon:
     pass
 
+
 class FissionProduct:
     pass
+
 
 class ControlRod:
     def __init__(self, descent=0):
         self.descent = descent
 
+
 class Moderator:
     pass
+
 
 all_sprites_list = pygame.sprite.Group()
 neutrons = []

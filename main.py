@@ -69,14 +69,15 @@ rod_width = 0.25 * square_size + gap
 rod_height = row_height * total_rows - gap
 
 for rod in range(total_rods):
-    control_rods.append(ControlRod(random.randint(0,100)))
+    control_rods.append(ControlRod(random.randint(0, 100)))
+
 
 def heat_transfer(grid, i, j):
     current_temp = grid[i][j].temperature
 
-    conduction = alpha * (grid[i+1][j] + grid[i-1][j] + grid[i][j+1] + grid[i][j-1] - 4 * current_temp)
+    conduction = alpha * (grid[i + 1][j] + grid[i - 1][j] + grid[i][j + 1] + grid[i][j - 1] - 4 * current_temp)
 
-    convection = (1 - F) * current_temp + (F / 4) * (grid[i+1][j] + grid[i-1][j] + grid[i][j+1] + grid[i][j-1])
+    convection = (1 - F) * current_temp + (F / 4) * (grid[i + 1][j] + grid[i - 1][j] + grid[i][j + 1] + grid[i][j - 1])
 
     if neutron_collision:
         pass
@@ -84,8 +85,10 @@ def heat_transfer(grid, i, j):
     dT = conduction + convection + fuel_rod_transfer + neutron_heating
     return dT
 
+
 def chance(percentage):
     return random.randint(1, 100) <= percentage
+
 
 # ------------------------------------- Main loop ----------------------------------------------------------------------
 clock = pygame.time.Clock()
@@ -107,20 +110,21 @@ while running:
             if isinstance(nuclei_grid[column][row], FuelRod):
                 pygame.draw.circle(screen, LIGHT_BLUE, (nuclei_x, nuclei_y), nucleus_diameter // 2)
 
-            if isinstance(nuclei_grid[column][row], FissionProduct):
+            elif isinstance(nuclei_grid[column][row], FissionProduct):
                 pygame.draw.circle(screen, GREY, (nuclei_x, nuclei_y), nucleus_diameter // 2)
 
-            if isinstance(nuclei_grid[column][row], Xenon):
+            elif isinstance(nuclei_grid[column][row], Xenon):
                 pygame.draw.circle(screen, PURPLE, (nuclei_x, nuclei_y), nucleus_diameter // 2)
 
             new_fuel = random.randint(1, 1000)
             xenon_production = random.randint(1, 5000)
 
-            if new_fuel == 1:
-                nuclei_grid[column][row] = FuelRod(21)
+            if isinstance(nuclei_grid[column][row], FissionProduct):
+                if new_fuel == 1:
+                    nuclei_grid[column][row] = FuelRod(21)
 
-            if xenon_production == 1:
-                nuclei_grid[column][row] = Xenon()
+                elif xenon_production == 1:
+                    nuclei_grid[column][row] = Xenon()
 
     # Control rod drawing
     for rod in range(total_rods):
@@ -128,7 +132,7 @@ while running:
         pygame.draw.rect(screen, MID_DARK_GREY,
                          (rod_x, start_y - rod_height * control_rods[rod].descent // 100, rod_width, rod_height))
 
-    time_delta = clock.tick(60)/1000
+    time_delta = clock.tick(60) / 1000
 
     # Event handling
     for event in pygame.event.get():
@@ -137,12 +141,24 @@ while running:
 
     # Game state updates
     # Neutron handling
-
     for neutron in neutrons:
         neutron.move(time_delta)
 
         neutron_column = int((neutron.position.x - start_x) // column_width)
         neutron_row = int((neutron.position.y - start_y) // row_height)
+
+        rod_gap = neutron_column // 4
+
+        buffer_right_x = start_x + rod_gap * (square_size + gap) * 4 + rod_width / 2
+        buffer_right = pygame.Rect(buffer_right_x, 0,
+                                   neutron.sprite.pixel_radius,
+                                   start_y + rod_height * control_rods[rod_gap].descent / 100)
+
+        buffer_down_x = start_x + rod_gap * (square_size + gap) * 4 - rod_width / 2
+        buffer_down_y = start_y + rod_height * control_rods[rod_gap].descent / 100
+        buffer_down = pygame.Rect(buffer_down_x, buffer_down_y, rod_width, neutron.sprite.pixel_radius)
+
+        buffer_left_x =
 
         if (neutron.position.x < 0 or neutron.position.x > width or
                 neutron.position.y < 0 or neutron.position.y > height):
@@ -150,7 +166,9 @@ while running:
             neutron.sprite.kill()
             continue
 
-        if 0 <= neutron_column < total_columns and 0 <= neutron_row < total_rows:
+        elif rod_gap
+
+        elif 0 <= neutron_column < total_columns and 0 <= neutron_row < total_rows:
 
             nucleus_position = Vector(neutron_column * column_width + (column_width // 2) + start_x,
                                       neutron_row * column_width + (column_width // 2) + start_y)
@@ -169,7 +187,7 @@ while running:
                         new_neutron = Neutron(nucleus_position, Vector(300, 300).rotate(angle), False)
                         neutrons.append(new_neutron)
 
-                if isinstance(nuclei_grid[neutron_column][neutron_row], Xenon) and chance(100):
+                elif isinstance(nuclei_grid[neutron_column][neutron_row], Xenon) and chance(100):
                     nuclei_grid[neutron_column][neutron_row] = FissionProduct()
 
                     neutrons.remove(neutron)
