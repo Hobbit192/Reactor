@@ -20,7 +20,14 @@ where $x$ is the distance travelled through the material. This formula is based 
 The following cross sections were used in this project:
 - U-235
   - Fission (thermal neutrons): $585.1 b$[^2]
-  - Fission (fast neutrons): 
+  - Fission (fast neutrons): $1 b$[^1]
+  - Absorption by radiative capture (thermal neutrons): $98 b$[^2]
+  - Absorption by radiative capture (fast neutrons): $0.15 b$[^2]
+- Xe-135
+  - Absorption by radiative capture (thermal neutrons): $2,778,000 b$[^3]
+  - Absorption by radiative capture (fast neutrons): $40 b$[^3]
+- Water (coolant)
+  - Absorption by radiative capture (thermal neutrons, primarily due to the hydrogen): $0.665 b$[^4]
 
 ### Heat Transfer
 When modelling heat transfer in this project, several things are taken into account. In the coolant system, it is necessary to firstly consider
@@ -62,11 +69,13 @@ The last consideration is the heating produced by the moderation and absorbtion 
 ```math
 T(i, j) = T(i, j) + N \cdot \frac{E_{neutron}}{m_{coolant} \cdot C_p},
 ```
-where N is the number of neutrons represented, functioning as a scaling factor for the heating. In order to estimate this, it is necessary to know how many neutrons are undergoing fission in the reactor per second, which is approximately $10^{20}$[^3]. Assuming that in our reactor, roughly 100 neutrons are present per second, the scaling factor N is $10^{18}$. This equation assumes 100% efficient energy transfer from kinetic energy of the neutron to thermal energy in the coolant.
+where N is the number of neutrons represented, functioning as a scaling factor for the heating. In order to estimate this, it is necessary to know how many neutrons are undergoing fission in the reactor per second, which is approximately $10^{20}$[^5]. Assuming that in our reactor, roughly 100 neutrons are present per second, the scaling factor N is $10^{18}$. This equation assumes 100% efficient energy transfer from kinetic energy of the neutron to thermal energy in the coolant.
 
 As a final addition, logic is added to make the water evaporate once it reaches $100^oC$. This means it can no longer absorb or moderate neutrons, as it is now much less dense, and so the absorption cross-section is effectively zero. Its temperature is still recorded, as it could cool down with the addition of new water from the pumps.
 
 ### References
 [^1]: https://www.nuclear-power.com/nuclear-power/reactor-physics/nuclear-engineering-fundamentals/neutron-nuclear-reactions/microscopic-cross-section/
 [^2]: https://wwwndc.jaea.go.jp/cgi-bin/Tab80WWW.cgi?iso=U235&lib=J40
-[^3]: https://www.nuclear-power.com/nuclear-power/reactor-physics/nuclear-engineering-fundamentals/neutron-nuclear-reactions/reaction-rate/
+[^3]: https://wwwndc.jaea.go.jp/cgi-bin/Tab80WWW.cgi?iso=Xe135&lib=J40
+[^4]: https://www.ncnr.nist.gov/resources/n-lengths/
+[^5]: https://www.nuclear-power.com/nuclear-power/reactor-physics/nuclear-engineering-fundamentals/neutron-nuclear-reactions/reaction-rate/
