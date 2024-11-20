@@ -4,7 +4,7 @@ rho = 0
 k = 5000
 alpha = 10
 m_neutron = 1.674927471e-27
-number = 2000
+number = 10e18
 
 fission_energy = 3.2e-11
 fission_heat = fission_energy * number * 0.9
@@ -20,13 +20,12 @@ LIGHT_BLUE = (124, 180, 184)
 PURPLE = (87, 70, 123)
 
 # Cross-sections
-u238_fission_thermal = 0
-u238_fission_fast = 0
-u238_absorption_thermal = 0
-u238_absorption_fast = 0
+u235_fission_thermal = 0
+u235_fission_fast = 0
+u235_absorption_thermal = 0
+u235_absorption_fast = 0
 
 xe135_absorption_thermal = 0
 xe135_absorption_fast = 0
 
 water_absorption_thermal = 0
-water_moderation_fast = 0
