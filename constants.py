@@ -1,4 +1,8 @@
 # Constants
+import pygame
+
+pygame.init()
+
 c_p = 0
 rho = 0
 k = 5000
@@ -9,6 +13,33 @@ number = 10e18
 fission_energy = 3.2e-11
 fission_heat = fission_energy * number * 0.9
 
+delayed_neutron_decay = 0.1842
+
+# Screen dimensions
+info = pygame.display.Info()
+width, height = info.current_w - 10, info.current_h - 100
+
+border_gap = 70
+gap = 3
+square_size = 30
+
+aspect_ratio = width / height
+
+total_columns = int((width - 2 * border_gap - gap) / (square_size + gap))
+total_rows = int(total_columns / aspect_ratio)
+
+total_grid_width = (total_columns * square_size) + (gap * (total_columns - 1))
+total_grid_height = (total_rows * square_size) + (gap * (total_rows - 1))
+
+start_x = (width - total_grid_width) // 2
+start_y = (height - total_grid_height) // 2
+
+column_width = square_size + gap
+row_height = square_size + gap
+
+rod_width = 0.25 * square_size + gap
+rod_height = row_height * total_rows - gap
+
 # Colours
 WHITE = (255, 255, 255)
 DARKER_GREY = (25, 25, 25)
@@ -16,6 +47,7 @@ DARK_GREY = (86, 86, 86)
 MID_DARK_GREY = (100, 100, 100)
 GREY = (150, 150, 150)
 LIGHT_GREY = (200, 200, 200)
+BLUE = (189, 206, 219)
 LIGHT_BLUE = (124, 180, 184)
 PURPLE = (87, 70, 123)
 

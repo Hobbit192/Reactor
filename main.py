@@ -2,16 +2,14 @@ import pygame
 import sys
 import random
 
-from constants import alpha, WHITE, GREY, LIGHT_GREY, LIGHT_BLUE, PURPLE, MID_DARK_GREY
-from nuclei import Coolant, neutrons, all_sprites_list, FuelRod, FissionProduct, Neutron, Xenon, ControlRod
+from constants import alpha, WHITE, GREY, BLUE, LIGHT_BLUE, PURPLE, LIGHT_GREY, DARKER_GREY, \
+    delayed_neutron_decay, square_size, gap, row_height, column_width, rod_width, width, height, \
+    total_columns, total_rows, start_x, start_y, rod_height
+from nuclei import Coolant, neutrons, all_sprites_list, FuelRod, FissionProduct, Neutron, Xenon, ControlRod, Moderator
 from vectors import Vector
 
 # Initialize Pygame
 pygame.init()
-
-# Screen dimensions
-info = pygame.display.Info()
-width, height = info.current_w - 10, info.current_h - 100
 
 # Set up the display
 screen = pygame.display.set_mode((width, height))
@@ -20,23 +18,6 @@ pygame.display.set_caption("Nuclear Reactor")
 
 # Coolant grid setup
 coolant_grid = []
-
-aspect_ratio = width / height
-border_gap = 70
-gap = 3
-square_size = 30
-
-column_width = square_size + gap
-row_height = square_size + gap
-
-total_columns = int((width - 2 * border_gap - gap) / (square_size + gap))
-total_rows = int(total_columns / aspect_ratio)
-
-total_grid_width = (total_columns * square_size) + (gap * (total_columns - 1))
-total_grid_height = (total_rows * square_size) + (gap * (total_rows - 1))
-
-start_x = (width - total_grid_width) // 2
-start_y = (height - total_grid_height) // 2
 
 # Each coolant square can be accessed by its position in the array
 for col in range(total_columns):
@@ -63,16 +44,23 @@ for col in range(total_columns):
 
 # Control rod setup
 control_rods = []
-total_rods = (total_columns - 1) // 3 + 1
+total_rods = (total_columns - 1) // 4 + 1
 
-rod_width = 0.25 * square_size + gap
-rod_height = row_height * total_rows - gap
+for control_rod in range(total_rods):
+    control_rod_x = start_x + (control_rod * (square_size + gap) * 4) - rod_width / 2
+    control_rod_y = start_y - rod_height
 
-for rod in range(total_rods):
-    control_rods.append(ControlRod(50))
+    control_rods.append(ControlRod(screen, Vector(control_rod_x, control_rod_y), 0))
 
-control_rods[0].descent = 0
+# Moderator setup
+moderators = []
+total_moderators = total_rods - 1
 
+for moderator in range(total_moderators):
+    moderator_x = start_x + (moderator * (square_size + gap) * 4) - rod_width / 2 + (square_size + gap) * 2
+    moderator_y = start_y
+
+    moderators.append(Moderator(screen, Vector(moderator_x, moderator_y)))
 
 def heat_transfer(grid, i, j):
     current_temp = grid[i][j].temperature
@@ -104,7 +92,7 @@ while running:
         for row in range(total_rows):
             coolant_x = start_x + column * (square_size + gap)
             coolant_y = start_y + row * (square_size + gap)
-            pygame.draw.rect(screen, LIGHT_GREY, (coolant_x, coolant_y, square_size, square_size))
+            pygame.draw.rect(screen, BLUE, (coolant_x, coolant_y, square_size, square_size))
 
             nuclei_x = start_x + column * (square_size + gap) + square_size // 2
             nuclei_y = start_y + row * (square_size + gap) + square_size // 2
@@ -118,10 +106,16 @@ while running:
             elif isinstance(nuclei_grid[column][row], Xenon):
                 pygame.draw.circle(screen, PURPLE, (nuclei_x, nuclei_y), nucleus_diameter // 2)
 
-            new_fuel = random.randint(1, 1000)
-            xenon_production = random.randint(1, 5000)
+            new_fuel = random.randint(1, 3000)
+            xenon_production = random.randint(1, 4500)
+            delayed_emission = random.randint(1, 10000)
 
             if isinstance(nuclei_grid[column][row], FissionProduct):
+                if delayed_emission <= delayed_neutron_decay * 10:
+                    angle = random.randint(0, 360)
+                    delayed_neutron = Neutron(Vector(nuclei_x, nuclei_y), Vector(150, 150).rotate(angle), False)
+                    neutrons.append(delayed_neutron)
+
                 if new_fuel == 1:
                     nuclei_grid[column][row] = FuelRod(21)
 
@@ -129,10 +123,12 @@ while running:
                     nuclei_grid[column][row] = Xenon()
 
     # Control rod drawing
-    for rod in range(total_rods):
-        rod_x = start_x + rod * (square_size + gap) * 4 - rod_width / 2
-        pygame.draw.rect(screen, MID_DARK_GREY,
-                         (rod_x, 0, rod_width, start_y + rod_height * control_rods[rod].descent // 100 ))
+    for control_rod in control_rods:
+        control_rod.draw()
+
+    # Moderator drawing
+    for moderator in moderators:
+        moderator.draw()
 
     time_delta = clock.tick(60) / 1000
 
@@ -140,6 +136,17 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+
+    keys = pygame.key.get_pressed()
+
+    if keys[pygame.K_DOWN]:
+        for rod in control_rods:
+            rod.descend(min(rod.descent + 1, 100))
+
+    elif keys[pygame.K_UP]:
+        for rod in control_rods:
+            rod.descend(max(rod.descent - 1, 0))
+
 
     # Game state updates
     # Neutron handling
@@ -149,32 +156,42 @@ while running:
         neutron_column = int((neutron.position.x - start_x) // column_width)
         neutron_row = int((neutron.position.y - start_y) // row_height)
 
+        left_moderator_x = (neutron.position.x - (start_x + (square_size + gap) * 2)) // ((square_size + gap) * 4) * ((square_size + gap) * 4) + ((square_size + gap) * 2)
+        distance_to_left_moderator = neutron.position.x - left_moderator_x
 
-        #check neutrol collision with left rod
+        #if distance_to_left_moderator <= ((rod_width / 2) + neutron.sprite.pixel_radius):
+            # left collision
 
-        left_rod = neutron_column//4
+        #elif distance_to_left_moderator >=
 
-        left_rod_x = start_x + left_rod * (square_size + gap) * 4 - rod_width / 2
+        """
+        # Check neutron collision with left rod
+        left_control_rod = neutron_column // 4
+
+        left_rod_x = start_x + left_control_rod * (square_size + gap) * 4 - rod_width / 2
+        left_rod_y = start_y + rod_height * control_rods[left_control_rod].descent / 100
 
         x_closest = min(neutron.position.x, left_rod_x + rod_width)
-        y_closest = min(neutron.position.y, start_y + rod_height*control_rods[left_rod].descent // 100)
+        y_closest = min(neutron.position.y, left_rod_y)
 
         # Compute the distance from the circle center to the closest point
         dx = x_closest - neutron.position.x
         dy = y_closest - neutron.position.y
-        distance_squared = dx * dx + dy * dy
+        distance_squared = dx ** 2 + dy ** 2
 
         if distance_squared < neutron.sprite.pixel_radius ** 2:
             neutrons.remove(neutron)
             neutron.sprite.kill()
             continue
 
-        right_rod = neutron_column // 4 + 1
+        # Check neutron collision with right rod
+        right_control_rod = neutron_column // 4
 
-        right_rod_x = start_x + right_rod * (square_size + gap) * 4 - rod_width / 2
+        right_rod_x = start_x + right_control_rod * (square_size + gap) * 4 - rod_width / 2
+        right_rod_y = start_y + rod_height * control_rods[right_control_rod].descent / 100
 
         x_closest = max(right_rod_x, min(neutron.position.x, right_rod_x + rod_width))
-        y_closest = max(0, min(neutron.position.y, start_y + rod_height * control_rods[right_rod].descent // 100))
+        y_closest = max(0, min(neutron.position.y, right_rod_y))
 
         # Compute the distance from the circle center to the closest point
         dx = x_closest - neutron.position.x
@@ -185,8 +202,8 @@ while running:
             neutrons.remove(neutron)
             neutron.sprite.kill()
             continue
-
-
+            
+        """
 
         if (neutron.position.x < 0 or neutron.position.x > width or
                 neutron.position.y < 0 or neutron.position.y > height):
@@ -210,7 +227,7 @@ while running:
 
                     for i in range(3):
                         angle = random.randint(0, 360)
-                        new_neutron = Neutron(nucleus_position, Vector(300, 300).rotate(angle), False)
+                        new_neutron = Neutron(nucleus_position, Vector(150, 150).rotate(angle), False)
                         neutrons.append(new_neutron)
 
                 elif isinstance(nuclei_grid[neutron_column][neutron_row], Xenon) and chance(100):
@@ -223,6 +240,8 @@ while running:
 
     all_sprites_list.draw(screen)
     pygame.display.flip()
+
+    print(len(neutrons))
 
 pygame.quit()
 sys.exit()

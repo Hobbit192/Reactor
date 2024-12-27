@@ -1,20 +1,27 @@
 import pygame
 
-from constants import m_neutron, WHITE, DARKER_GREY
+from constants import m_neutron, WHITE, DARKER_GREY, LIGHT_GREY, MID_DARK_GREY, rod_width, rod_height
 from vectors import Vector
 
 
 class Sprite(pygame.sprite.Sprite):
-    def __init__(self, colour, pixel_radius):
+    def __init__(self, colour, pixel_radius, fast):
         super().__init__()
 
         self.colour = colour
         self.pixel_radius = pixel_radius
+        self.fast = fast
         self.image = pygame.Surface([pixel_radius * 2, pixel_radius * 2])
         self.image.fill(WHITE)
         self.image.set_colorkey(WHITE)
 
-        pygame.draw.circle(self.image, colour, (pixel_radius, pixel_radius), pixel_radius)
+        if fast:
+            pygame.draw.circle(self.image, DARKER_GREY, (pixel_radius, pixel_radius), pixel_radius)
+            pygame.draw.circle(self.image, colour, (pixel_radius, pixel_radius), pixel_radius - 3)
+
+        else:
+            pygame.draw.circle(self.image, colour, (pixel_radius, pixel_radius), pixel_radius)
+
         self.rect = self.image.get_rect()
 
     def set_pos(self, position):
@@ -37,15 +44,13 @@ class Neutron:
         self.fast = fast
         self.speed = velocity.magnitude()
 
-        self.sprite = Sprite(DARKER_GREY, 7)
-        all_sprites_list.add(self.sprite)
-
-    def draw(self):
-        if self.fast:
-            pass
+        if fast:
+            self.sprite = Sprite(LIGHT_GREY, 7, True)
 
         else:
-            pass
+            self.sprite = Sprite(DARKER_GREY, 7, False)
+
+        all_sprites_list.add(self.sprite)
 
     def move(self, dt):
         self.position += self.velocity * dt
@@ -68,16 +73,34 @@ class FissionProduct:
 
 
 class ControlRod:
-    def __init__(self, descent=0):
+    def __init__(self, screen, left_top, descent=0):
         self.descent = descent
+        self.screen = screen
+        self.left_top = left_top
+        self.rect = pygame.Rect((left_top.x, left_top.y), (rod_width, rod_height))
+
+    def descend(self, new_descent):
+        self.descent = new_descent
+        self.rect = pygame.Rect((self.left_top.x, self.left_top.y + rod_height * (new_descent / 100)),
+                                (rod_width, rod_height))
+
+    def draw(self):
+        pygame.draw.rect(self.screen, MID_DARK_GREY, self.rect)
 
 
 class Moderator:
-    pass
+    def __init__(self, screen, left_top):
+        self.screen = screen
+        self.left_top = left_top
+        self.outer_rect = pygame.Rect((self.left_top.x, self.left_top.y), (rod_width, rod_height))
+        self.inner_rect = pygame.Rect((self.left_top.x + 3, self.left_top.y + 3), (rod_width - 6, rod_height - 6))
 
+    def draw(self):
+        pygame.draw.rect(self.screen, DARKER_GREY, self.outer_rect)
+        pygame.draw.rect(self.screen, LIGHT_GREY, self.inner_rect)
 
 all_sprites_list = pygame.sprite.Group()
 neutrons = []
 
-starter = Neutron(Vector(0, 500), Vector(300, 300), False)
+starter = Neutron(Vector(0, 100), Vector(300, 300), True)
 neutrons.append(starter)
