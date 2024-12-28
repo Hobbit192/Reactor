@@ -15,6 +15,9 @@ fission_heat = fission_energy * number * 0.9
 
 delayed_neutron_decay = 0.1842
 
+slow_speed = (2 *(150 ** 2)) ** 0.5
+fast_speed = (2 *(250 ** 2)) ** 0.5
+
 # Screen dimensions
 info = pygame.display.Info()
 width, height = info.current_w - 10, info.current_h - 100

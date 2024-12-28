@@ -4,7 +4,7 @@ import random
 
 from constants import alpha, WHITE, GREY, BLUE, LIGHT_BLUE, PURPLE, LIGHT_GREY, DARKER_GREY, \
     delayed_neutron_decay, square_size, gap, row_height, column_width, rod_width, width, height, \
-    total_columns, total_rows, start_x, start_y, rod_height
+    total_columns, total_rows, start_x, start_y, rod_height, fast_speed, slow_speed
 from nuclei import Coolant, neutrons, all_sprites_list, FuelRod, FissionProduct, Neutron, Xenon, ControlRod, Moderator
 from vectors import Vector
 
@@ -113,7 +113,9 @@ while running:
             if isinstance(nuclei_grid[column][row], FissionProduct):
                 if delayed_emission <= delayed_neutron_decay * 10:
                     angle = random.randint(0, 360)
-                    delayed_neutron = Neutron(Vector(nuclei_x, nuclei_y), Vector(150, 150).rotate(angle), False)
+                    delayed_neutron = Neutron(position=Vector(nuclei_x, nuclei_y),
+                                              velocity=Vector(200, 200).rotate(angle),
+                                              fast=True)
                     neutrons.append(delayed_neutron)
 
                 if new_fuel == 1:
@@ -156,55 +158,6 @@ while running:
         neutron_column = int((neutron.position.x - start_x) // column_width)
         neutron_row = int((neutron.position.y - start_y) // row_height)
 
-        left_moderator_x = (neutron.position.x - (start_x + (square_size + gap) * 2)) // ((square_size + gap) * 4) * ((square_size + gap) * 4) + ((square_size + gap) * 2)
-        distance_to_left_moderator = neutron.position.x - left_moderator_x
-
-        #if distance_to_left_moderator <= ((rod_width / 2) + neutron.sprite.pixel_radius):
-            # left collision
-
-        #elif distance_to_left_moderator >=
-
-        """
-        # Check neutron collision with left rod
-        left_control_rod = neutron_column // 4
-
-        left_rod_x = start_x + left_control_rod * (square_size + gap) * 4 - rod_width / 2
-        left_rod_y = start_y + rod_height * control_rods[left_control_rod].descent / 100
-
-        x_closest = min(neutron.position.x, left_rod_x + rod_width)
-        y_closest = min(neutron.position.y, left_rod_y)
-
-        # Compute the distance from the circle center to the closest point
-        dx = x_closest - neutron.position.x
-        dy = y_closest - neutron.position.y
-        distance_squared = dx ** 2 + dy ** 2
-
-        if distance_squared < neutron.sprite.pixel_radius ** 2:
-            neutrons.remove(neutron)
-            neutron.sprite.kill()
-            continue
-
-        # Check neutron collision with right rod
-        right_control_rod = neutron_column // 4
-
-        right_rod_x = start_x + right_control_rod * (square_size + gap) * 4 - rod_width / 2
-        right_rod_y = start_y + rod_height * control_rods[right_control_rod].descent / 100
-
-        x_closest = max(right_rod_x, min(neutron.position.x, right_rod_x + rod_width))
-        y_closest = max(0, min(neutron.position.y, right_rod_y))
-
-        # Compute the distance from the circle center to the closest point
-        dx = x_closest - neutron.position.x
-        dy = y_closest - neutron.position.y
-        distance_squared = dx * dx + dy * dy
-
-        if distance_squared < neutron.sprite.pixel_radius ** 2:
-            neutrons.remove(neutron)
-            neutron.sprite.kill()
-            continue
-            
-        """
-
         if (neutron.position.x < 0 or neutron.position.x > width or
                 neutron.position.y < 0 or neutron.position.y > height):
             neutrons.remove(neutron)
@@ -227,14 +180,30 @@ while running:
 
                     for i in range(3):
                         angle = random.randint(0, 360)
-                        new_neutron = Neutron(nucleus_position, Vector(150, 150).rotate(angle), False)
+                        new_neutron = Neutron(nucleus_position, Vector(200, 200).rotate(angle), True)
                         neutrons.append(new_neutron)
+
+                    continue
 
                 elif isinstance(nuclei_grid[neutron_column][neutron_row], Xenon) and chance(100):
                     nuclei_grid[neutron_column][neutron_row] = FissionProduct()
 
                     neutrons.remove(neutron)
                     neutron.sprite.kill()
+                    continue
+
+        for control_rod in control_rods:
+            if neutron.collision_check(control_rod):
+                neutrons.remove(neutron)
+                neutron.sprite.kill()
+                break
+
+        for moderator in moderators:
+            if neutron.collision_check(moderator):
+                if neutron.fast:
+                    neutron.set_fast(False)
+                    neutron.velocity.x = -(neutron.velocity.x / fast_speed) * slow_speed
+                    neutron.velocity.y = (neutron.velocity.y / fast_speed) * slow_speed
 
         neutron.sprite.set_pos(neutron.position)
 
