@@ -63,13 +63,13 @@ In this equation, $k$ is the thermal conductivity of the liquid, $\rho$ is the d
 
 Next, the **conduction** between the fuel rods and coolant squares is considered. For this, **Newton's law of cooling** is applied between the fuel rod and the coolant, which can be written as:
 ```math
-\frac{dQ}{dt} \propto (T_{Fuel rod} - T_{Coolant})
+\frac{dQ}{dt} \propto (T_{Fuel \ rod} - T_{Coolant})
 ```
 In a discrete form, this becomes:
 ```math
-T(i, j) = T(i, j) + k \cdot [T_{Fuel rod} - T(i, j)],
+T(i, j) = T(i, j) + h \cdot [T_{Fuel \ rod} - T(i, j)],
 ```
-where k is the heat transfer coefficient. The value of k is usually experimentally determined, as it is difficult to calculate. In this program, it is taken as $5000W/(m^2 \cdot K)$. Several simplifications are made in this system: the fuel rods are of a uniform temperature, internal conduction in the fuel rods is ignored, heat transfer is considered to be instantaneous and the value of k is presumed to remain constant.
+where h is the heat transfer coefficient. The value of h is usually experimentally determined, as it is difficult to calculate. In this program, it is taken as $5000W/(m^2 \cdot K)$. Several simplifications are made in this system: the fuel rods are of a uniform temperature, internal conduction in the fuel rods is ignored, heat transfer is considered to be instantaneous and the value of k is presumed to remain constant. It is also assumed 
 
 After this, a **forced cooling** system is implemented to simulate the inflow of fresh liquid. The flow rate, $\dot{F}$ is modelled as a fraction between 0 and 1 for how aggressively old fluid is replaced with new fluid: $\dot{F} = 1$ means the entire square's coolant is instantly replaced with new fluid at a temperature of $T_{in}$, and $\dot{F} = 0$ results in no forced replacement. This results in the following equation:
 ```math
@@ -77,21 +77,15 @@ T(i, j) = T(i, j) - \dot{F} (T_{i,j} - T_{in})
 ```
 The value of $\dot{F}$ can be varied by the user.
 
-The last consideration is the heating produced by the **moderation and absorbtion of neutrons**. For this the energies of thermal and fast neutrons are used: $0.025 eV$ for a thermal neutron[^6] and $2 MeV$ for a fast neutron[^7].In an RBMK reactor, graphite is the primary moderator, but light water also serves to slow down and absorb neutrons. In order to determine the number of collisions required to absorb a thermal neutron, a random sample from a **geometric distribution** is taken, with the probability calculated from the hydrogen radiative capture cross section. The distribution is:
-```math
-X \sim Geo(p)
-```
-where X is the number of collisions before absorption. This assumes a fixed probability - in reality, it changes with neutron speed. The total energy of the neutron is then divided by the number of collision before an absorption that the neutron will undergo, and distributed among each square that the neutron passes through - including the final sqaure in which is it absorbed - resulting in a temperature increase. This ensures that the neutron imparts some of its energy to each square that it passes through, while also ensuring that energy is conserved, as the energy transferred to the squares as heat is equal to the total initial energy of the neutron. The formula for the sampling is:
-```math
-x = \lfloor \frac{ln(U)}{ln(1 - p)} \rfloor + 1
-```
-The floor function is used to ensure an integer result. $U$ is a number determined by a continuous uniform distribution such that $U \in (0, 1)$. The energy of the neutron is converted to heat using the equation:
+The last consideration is the heating produced by the **moderation and absorbtion of neutrons**. For this the energies of thermal and fast neutrons are used: $0.025 \ eV$ for a thermal neutron[^6] and $2 \ MeV$ for a fast neutron[^7].In an RBMK reactor, graphite is the primary moderator, but light water also serves to slow down and absorb neutrons. In this simulation, the chance for a thermal neutron to be absorbed is assumed to be fixed, although in reality it is dependent on the speed of the neutron. As thermal neutron collisions result in a minimal energy transfer to the coolant, they are ignored, and all of the energy of the thermal neutron is transferred to the square that it is absorbed by. The energy of the neutron is then converted to heat using the equation:
 ```math
 T(i, j) = T(i, j) + N \cdot \frac{E_{neutron}}{m_{coolant} \cdot C_p},
 ```
-where N is the number of neutrons represented, functioning as a scaling factor for the heating. In order to estimate this, it is necessary to know how many neutrons are undergoing fission in the reactor per second, which is approximately $10^{20}$[^8]. Assuming that in our reactor, roughly 100 neutrons are present per second, the scaling factor $N$ is $10^{18}$. This equation assumes 100% efficient energy transfer from kinetic energy of the neutron to thermal energy in the coolant.
+where N is the number of neutrons represented, functioning as a scaling factor for the heating. In order to estimate this, it is necessary to know how many neutrons are undergoing fission in the reactor per second, which is approximately $10^{20}$[^8]. Assuming that in our reactor, roughly 100 neutrons are present per second, the scaling factor $N$ is $10^{18}$. This equation assumes 100% efficient energy transfer from kinetic energy of the neutron to thermal energy in the coolant. 
 
-The energy transferred by **moderation of fast neutrons** follows a similar process. The number of collisions required to moderate a neutron at $2 MeV$ energy can be estimated using the **logarithmic energy decrement**. To do this we define a parameter $\xi$, which is equal to the average decrease in the neutron's $ln(E)$ per collision. For hydrogen, $\xi \approx 1$, so the number of collisions is:
+A larger portion of the energy released by neutron capture is the gamma emission which results from the de-excitation of the nuclues after capturing a neutron. For light water, the hydrogen becomes deuterium and releases a $2.2 \ MeV$ gamma ray. The energy of this gamma ray is transferred to the water through three processes: the ejection of electrons from water molecules (the photoelectric effect), Compton scattering, in which he gamma ray transfers part of its energy to electrons in the water, which further ionize and excite other molecules, and pair production. In the simulation, the energy is simply all transferred as heat energy to the water.
+
+The energy transferred by **moderation of fast neutrons** follows a different process. The number of collisions required to moderate a neutron at $2 MeV$ energy can be estimated using the **logarithmic energy decrement**. To do this we define a parameter $\xi$, which is equal to the average decrease in the neutron's $ln(E)$ per collision. For hydrogen, $\xi \approx 1$, so the number of collisions is:
 ```math
 N \approx \frac{ln(E_{fast}/E_{thermal})}{\xi}
 ```
