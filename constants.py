@@ -6,10 +6,12 @@ pygame.init()
 c_p = 4184
 rho = 997
 k = 0.6
-h = 5000
-alpha = k / (rho * c_p)
+#h = 5000
+h = 0.5
+#alpha = k / (rho * c_p)
+alpha = 0.1
 e = 1.602176634e-19
-flow_rate = 0.1
+flow_rate = 0.005
 coolant_inflow_temp = 260
 min_temp = 260
 desaturation = 0.46

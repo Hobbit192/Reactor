@@ -84,9 +84,10 @@ def heat_transfer(i, j):
         neighbouring_temp += coolant_grid[i][j - 1].temperature
         neighbour_number += 1
 
-    conduction = 0.2 * (neighbouring_temp - neighbour_number * current_temp)
+    conduction = alpha * (neighbouring_temp - neighbour_number * current_temp)
 
-    fuel_rod_transfer = 0.01 * (nuclei_grid[i][j].temperature - coolant_grid[i][j].temperature)
+    fuel_rod_transfer = h * (nuclei_grid[i][j].temperature - coolant_grid[i][j].temperature)
+    nuclei_grid[i][j].temperature -= fuel_rod_transfer
 
     forced_cooling = flow_rate * (coolant_grid[i][j].temperature - coolant_inflow_temp)
 
