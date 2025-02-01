@@ -4,7 +4,8 @@ import random
 
 from constants import alpha, h, e, WHITE, GREY, BLUE, LIGHT_BLUE, PURPLE, \
     delayed_neutron_decay, square_size, gap, row_height, column_width, rod_width, width, height, \
-    total_columns, total_rows, start_x, start_y, rod_height, fast_speed, slow_speed, flow_rate, coolant_inflow_temp, RED
+    total_columns, total_rows, start_x, start_y, rod_height, fast_speed, slow_speed, flow_rate, coolant_inflow_temp, \
+    RED, min_temp, max_temp, desaturation
 from nuclei import Coolant, neutrons, all_sprites_list, FuelRod, FissionProduct, Neutron, Xenon, ControlRod, Moderator
 from vectors import Vector
 
@@ -23,7 +24,7 @@ coolant_grid = []
 for col in range(total_columns):
     coolant_grid.append([])
     for row in range(total_rows):
-        coolant_square = Coolant(coolant_inflow_temp + col * 5 - row * 3)
+        coolant_square = Coolant(coolant_inflow_temp)
         coolant_grid[col].append(coolant_square)
 
 # Nuclei grid setup
@@ -35,11 +36,11 @@ for col in range(total_columns):
     nuclei_grid.append([])
     for row in range(total_rows):
         if random.randint(1, 10) == 1:
-            uranium = FuelRod(21)
+            uranium = FuelRod(coolant_inflow_temp)
             nuclei_grid[col].append(uranium)
 
         else:
-            nucleus = FissionProduct(21)
+            nucleus = FissionProduct(coolant_inflow_temp)
             nuclei_grid[col].append(nucleus)
 
 # Control rod setup
@@ -62,32 +63,32 @@ for moderator in range(total_moderators):
 
     moderators.append(Moderator(screen, Vector(moderator_x, moderator_y)))
 
-def heat_transfer(grid, i, j):
-    current_temp = grid[i][j].temperature
+def heat_transfer(i, j):
+    current_temp = coolant_grid[i][j].temperature
     neighbouring_temp = 0
     neighbour_number = 0
 
     if i + 1 < total_columns:  # Right neighbour
-        neighbouring_temp += grid[i + 1][j].temperature
+        neighbouring_temp += coolant_grid[i + 1][j].temperature
         neighbour_number += 1
 
     if i - 1 >= 0:  # Left neighbour
-        neighbouring_temp += grid[i - 1][j].temperature
+        neighbouring_temp += coolant_grid[i - 1][j].temperature
         neighbour_number += 1
 
     if j + 1 < total_rows:  # Bottom neighbour
-        neighbouring_temp += grid[i][j + 1].temperature
+        neighbouring_temp += coolant_grid[i][j + 1].temperature
         neighbour_number += 1
 
     if j - 1 >= 0:  # Top neighbour
-        neighbouring_temp += grid[i][j - 1].temperature
+        neighbouring_temp += coolant_grid[i][j - 1].temperature
         neighbour_number += 1
 
-    conduction = alpha * (neighbouring_temp - neighbour_number * current_temp)
+    conduction = 0.2 * (neighbouring_temp - neighbour_number * current_temp)
 
-    fuel_rod_transfer = h * (nuclei_grid[i][j].temperature - grid[i][j].temperature)
+    fuel_rod_transfer = 0.01 * (nuclei_grid[i][j].temperature - coolant_grid[i][j].temperature)
 
-    forced_cooling = flow_rate * (grid[i][j].temperature - coolant_inflow_temp)
+    forced_cooling = flow_rate * (coolant_grid[i][j].temperature - coolant_inflow_temp)
 
     new_temp = current_temp + conduction + fuel_rod_transfer - forced_cooling
     return new_temp
@@ -96,7 +97,7 @@ def heat_transfer(grid, i, j):
 def chance(percentage):
     return random.randint(1, 100) <= percentage
 
-def temperature_to_colour(temp, min_temp=260, max_temp=285, desaturation=0.46):
+def temperature_to_colour(temp):
     normalized = (temp - min_temp) / (max_temp - min_temp)
     normalized = max(0, min(normalized, 1))
 
@@ -162,7 +163,7 @@ while running:
                     neutrons.append(delayed_neutron)
 
                 if new_fuel == 1:
-                    nuclei_grid[column][row] = FuelRod(21)
+                    nuclei_grid[column][row] = FuelRod(coolant_inflow_temp)
 
                 elif xenon_production == 1:
                     nuclei_grid[column][row] = Xenon(nuclei_grid[column][row].temperature)
@@ -199,7 +200,7 @@ while running:
 
     for i in range(total_columns):
         for j in range(total_rows):
-            new_temperatures[i][j] = heat_transfer(coolant_grid, i, j)
+            new_temperatures[i][j] = heat_transfer(i, j)
 
     # Apply new temperatures
     for i in range(total_columns):
@@ -265,7 +266,7 @@ while running:
     all_sprites_list.draw(screen)
     pygame.display.flip()
 
-    print(len(neutrons))
+    #print(len(neutrons))
 
 pygame.quit()
 sys.exit()

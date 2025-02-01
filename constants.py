@@ -9,8 +9,11 @@ k = 0.6
 h = 5000
 alpha = k / (rho * c_p)
 e = 1.602176634e-19
-flow_rate = 0
+flow_rate = 0.1
 coolant_inflow_temp = 260
+min_temp = 260
+desaturation = 0.46
+max_temp = 285
 m_neutron = 1.674927471e-27
 number = 10e18
 
