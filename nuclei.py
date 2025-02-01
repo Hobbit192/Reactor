@@ -39,9 +39,6 @@ class Coolant:
     def __init__(self, temperature):
         self.temperature = temperature
 
-    def collision_check(self):
-        pass
-
 
 class Neutron:
     def __init__(self, position, velocity, fast):
@@ -92,11 +89,12 @@ class FuelRod:
 
 
 class Xenon:
-    pass
-
+    def __init__(self, temperature):
+        self.temperature = temperature
 
 class FissionProduct:
-    pass
+    def __init__(self, temperature):
+        self.temperature = temperature
 
 
 class ControlRod:

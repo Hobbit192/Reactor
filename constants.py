@@ -3,14 +3,18 @@ import pygame
 
 pygame.init()
 
-c_p = 0
-rho = 0
-k = 5000
-alpha = 10
+c_p = 4184
+rho = 997
+k = 0.6
+h = 5000
+alpha = k / (rho * c_p)
+e = 1.602176634e-19
+flow_rate = 0
+coolant_inflow_temp = 260
 m_neutron = 1.674927471e-27
 number = 10e18
 
-fission_energy = 3.2e-11
+fission_energy = 195e6
 fission_heat = fission_energy * number * 0.9
 
 delayed_neutron_decay = 0.1842
@@ -51,6 +55,7 @@ MID_DARK_GREY = (100, 100, 100)
 GREY = (150, 150, 150)
 LIGHT_GREY = (200, 200, 200)
 BLUE = (189, 206, 219)
+RED = (193, 18, 31)
 LIGHT_BLUE = (124, 180, 184)
 PURPLE = (87, 70, 123)
 
