@@ -11,7 +11,6 @@ h = 0.5
 #alpha = k / (rho * c_p)
 alpha = 0.1
 e = 1.602176634e-19
-flow_rate = 0.005
 coolant_inflow_temp = 260
 min_temp = 260
 desaturation = 0.46

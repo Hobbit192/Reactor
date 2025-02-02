@@ -4,21 +4,26 @@ import random
 
 from constants import alpha, h, e, WHITE, GREY, BLUE, LIGHT_BLUE, PURPLE, \
     delayed_neutron_decay, square_size, gap, row_height, column_width, rod_width, width, height, \
-    total_columns, total_rows, start_x, start_y, rod_height, fast_speed, slow_speed, flow_rate, coolant_inflow_temp, \
+    total_columns, total_rows, start_x, start_y, rod_height, fast_speed, slow_speed, coolant_inflow_temp, \
     RED, min_temp, max_temp, desaturation
 from nuclei import Coolant, neutrons, all_sprites_list, FuelRod, FissionProduct, Neutron, Xenon, ControlRod, Moderator
 from vectors import Vector
 
 # Initialize Pygame
 pygame.init()
+pygame.mixer.init()
 
 # Set up the display
 screen = pygame.display.set_mode((width, height))
 coolant_surface = pygame.Surface((width, height))
 pygame.display.set_caption("Nuclear Reactor")
 
+# Load sound
+click = pygame.mixer.Sound("Click.mp3")
+
 # Coolant grid setup
 coolant_grid = []
+flow_rate = 0.05
 
 # Each coolant square can be accessed by its position in the array
 for col in range(total_columns):
@@ -63,6 +68,7 @@ for moderator in range(total_moderators):
 
     moderators.append(Moderator(screen, Vector(moderator_x, moderator_y)))
 
+
 def heat_transfer(i, j):
     current_temp = coolant_grid[i][j].temperature
     neighbouring_temp = 0
@@ -98,6 +104,7 @@ def heat_transfer(i, j):
 def chance(percentage):
     return random.randint(1, 100) <= percentage
 
+
 def temperature_to_colour(temp):
     normalized = (temp - min_temp) / (max_temp - min_temp)
     normalized = max(0, min(normalized, 1))
@@ -120,8 +127,10 @@ def temperature_to_colour(temp):
 
     return red, green, blue
 
+
 def eV_to_J(energy):
     return energy * e
+
 
 # ------------------------------------- Main loop ----------------------------------------------------------------------
 clock = pygame.time.Clock()
@@ -194,6 +203,13 @@ while running:
         for rod in control_rods:
             rod.descend(max(rod.descent - 1, 0))
 
+    elif keys[pygame.K_w]:
+        flow_rate = min(0.05, flow_rate + 0.001)
+        print(flow_rate)
+
+    elif keys[pygame.K_s]:
+        flow_rate = max(0, flow_rate - 0.001)
+        print(flow_rate)
 
     # Game state updates
     # Heat transfer
@@ -230,10 +246,13 @@ while running:
 
             if separation.magnitude() < nucleus_diameter / 2 + neutron.sprite.pixel_radius:
                 if isinstance(nuclei_grid[neutron_column][neutron_row], FuelRod) and chance(100):
-                    nuclei_grid[neutron_column][neutron_row] = FissionProduct(nuclei_grid[neutron_column][neutron_row].temperature + 100)
+                    # FISSION EVENT
+                    nuclei_grid[neutron_column][neutron_row] = FissionProduct(
+                        nuclei_grid[neutron_column][neutron_row].temperature + 100)
 
                     neutrons.remove(neutron)
                     neutron.sprite.kill()
+                    click.play()
 
                     for i in range(3):
                         angle = random.randint(0, 360)
@@ -243,7 +262,8 @@ while running:
                     continue
 
                 elif isinstance(nuclei_grid[neutron_column][neutron_row], Xenon) and chance(100):
-                    nuclei_grid[neutron_column][neutron_row] = FissionProduct(nuclei_grid[neutron_column][neutron_row].temperature)
+                    nuclei_grid[neutron_column][neutron_row] = FissionProduct(
+                        nuclei_grid[neutron_column][neutron_row].temperature)
 
                     neutrons.remove(neutron)
                     neutron.sprite.kill()
