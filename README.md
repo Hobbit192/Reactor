@@ -59,7 +59,7 @@ where $\alpha$ is the thermal diffusivity of the fluid, which is calculated by:
 ```math
 \alpha = \frac{k}{\rho C_p}
 ```
-In this equation, $k$ is the thermal conductivity of the liquid, $\rho$ is the density and $C_p$ is the specific heat capacity. As these values are all constant, $\alpha$ is calculated only once and stored in the constants file.
+In this equation, $k$ is the thermal conductivity of the liquid, $\rho$ is the density and $C_p$ is the specific heat capacity. As these values are all constant, $\alpha$ is calculated only once and stored in the constants file. For simulation balance, the value of $\alpha$ has been increased to make the diffusion of heat through the system more noticeable.
 
 Next, the **conduction** between the fuel rods and coolant squares is considered. For this, **Newton's law of cooling** is applied between the fuel rod and the coolant, which can be written as:
 ```math
@@ -69,7 +69,7 @@ In a discrete form, this becomes:
 ```math
 T(i, j) = T(i, j) + h \cdot [T_{Fuel \ rod} - T(i, j)],
 ```
-where h is the heat transfer coefficient. The value of h is usually experimentally determined, as it is difficult to calculate. In this program, it is taken as $5000W/(m^2 \cdot K)$. Several simplifications are made in this system: the fuel rods are of a uniform temperature, internal conduction in the fuel rods is ignored, heat transfer is considered to be instantaneous and the value of k is presumed to remain constant. It is also assumed 
+where h is the heat transfer coefficient. The value of h is usually experimentally determined, as it is difficult to calculate. The real value for a reactor is $5000W/(m^2 \cdot K)$, but it has been adjusted in this simulation for balance. Several simplifications are made in this system: the fuel rods are of a uniform temperature, internal conduction in the fuel rods is ignored, heat transfer is considered to be instantaneous and the value of h is presumed to remain constant. 
 
 After this, a **forced cooling** system is implemented to simulate the inflow of fresh liquid. The flow rate, $\dot{F}$ is modelled as a fraction between 0 and 1 for how aggressively old fluid is replaced with new fluid: $\dot{F} = 1$ means the entire square's coolant is instantly replaced with new fluid at a temperature of $T_{in}$, and $\dot{F} = 0$ results in no forced replacement. This results in the following equation:
 ```math
@@ -83,7 +83,7 @@ T(i, j) = T(i, j) + N \cdot \frac{E_{neutron}}{m_{coolant} \cdot C_p},
 ```
 where N is the number of neutrons represented, functioning as a scaling factor for the heating. In order to estimate this, it is necessary to know how many neutrons are undergoing fission in the reactor per second, which is approximately $10^{20}$[^8]. Assuming that in our reactor, roughly 100 neutrons are present per second, the scaling factor $N$ is $10^{18}$. This equation assumes 100% efficient energy transfer from kinetic energy of the neutron to thermal energy in the coolant. 
 
-A larger portion of the energy released by neutron capture is the gamma emission which results from the de-excitation of the nuclues after capturing a neutron. For light water, the hydrogen becomes deuterium and releases a $2.2 \ MeV$ gamma ray. The energy of this gamma ray is transferred to the water through three processes: the ejection of electrons from water molecules (the photoelectric effect), Compton scattering, in which he gamma ray transfers part of its energy to electrons in the water, which further ionize and excite other molecules, and pair production. In the simulation, the energy is simply all transferred as heat energy to the water.
+A larger portion of the energy released by neutron capture is the gamma emission which results from the de-excitation of the nuclues after capturing a neutron. For light water, the hydrogen becomes deuterium and releases a $2.2 \ MeV$ gamma ray. The energy of this gamma ray is transferred to the water through three processes: the ejection of electrons from water molecules (the photoelectric effect), Compton scattering - in which the gamma ray transfers part of its energy to electrons in the water, which further ionize and excite other molecules - and pair production. In the simulation, the energy is simply all transferred as heat energy to the water.
 
 The energy transferred by **moderation of fast neutrons** follows a different process. The number of collisions required to moderate a neutron at $2 MeV$ energy can be estimated using the **logarithmic energy decrement**. To do this we define a parameter $\xi$, which is equal to the average decrease in the neutron's $ln(E)$ per collision. For hydrogen, $\xi \approx 1$, so the number of collisions is:
 ```math
@@ -91,7 +91,7 @@ N \approx \frac{ln(E_{fast}/E_{thermal})}{\xi}
 ```
 which gives $N \approx 18$ using the energy values above. For balance, this is decreased to SOME NUMBER of collisions in the simulation.
 
-As a final addition, logic is added to make the water evaporate once it reaches $100^oC$. This means it can no longer absorb or moderate neutrons, as it is now much less dense, and so the absorption cross-section is effectively zero. Its temperature is still recorded, as it could cool down with the addition of new water from the pumps.
+As a final addition, logic is added to make the water evaporate once it reaches $295^oC$. RBMK reactors used water at a very high pressure and at $260^oC$[^9], as it was more thermally efficient at removing heat from the reactor. This also increased the boiling point of the water, allowing the reactor as a whole to operate at a higher temperature. For the coolant, this means it can no longer absorb or moderate neutrons, as it is now much less dense, and so the absorption cross-section is effectively zero. Its temperature is still recorded, as it could cool down with the addition of new water from the pumps.
 
 ### References
 [^1]: https://www.oecd-nea.org/upload/docs/application/pdf/2019-12/volume6.pdf
@@ -102,3 +102,4 @@ As a final addition, logic is added to make the water evaporate once it reaches 
 [^6]: https://www.nrc.gov/reading-rm/basic-ref/glossary/neutron-thermal.html
 [^7]: https://www.nuclear-power.com/nuclear-power/reactor-physics/atomic-nuclear-physics/fundamental-particles/neutron/neutron-energy/
 [^8]: https://www.nuclear-power.com/nuclear-power/reactor-physics/nuclear-engineering-fundamentals/neutron-nuclear-reactions/reaction-rate/
+[^9]: https://www-pub.iaea.org/MTCD/publications/PDF/Pub1211_web.pdf
