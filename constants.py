@@ -3,18 +3,13 @@ import pygame
 
 pygame.init()
 
-c_p = 4184
-rho = 997
-k = 0.6
-#h = 5000
-h = 0.5
-#alpha = k / (rho * c_p)
+h = 0.01
 alpha = 0.1
 e = 1.602176634e-19
 coolant_inflow_temp = 260
 min_temp = 260
 desaturation = 0.46
-max_temp = 285
+max_temp = 295
 m_neutron = 1.674927471e-27
 number = 10e18
 
@@ -23,8 +18,8 @@ fission_heat = fission_energy * number * 0.9
 
 delayed_neutron_decay = 0.1842
 
-slow_speed = (2 *(150 ** 2)) ** 0.5
-fast_speed = (2 *(250 ** 2)) ** 0.5
+slow_speed = (2 * (150 ** 2)) ** 0.5
+fast_speed = (2 * (250 ** 2)) ** 0.5
 
 # Screen dimensions
 info = pygame.display.Info()
@@ -64,12 +59,12 @@ LIGHT_BLUE = (124, 180, 184)
 PURPLE = (87, 70, 123)
 
 # Cross-sections
-u235_fission_thermal = 0
-u235_fission_fast = 0
-u235_absorption_thermal = 0
-u235_absorption_fast = 0
+u235_fission_thermal = 585.1
+u235_fission_fast = 1
+u235_absorption_thermal = 98
+u235_absorption_fast = 0.15
 
-xe135_absorption_thermal = 0
-xe135_absorption_fast = 0
+xe135_absorption_thermal = 2778000
+xe135_absorption_fast = 40
 
-water_absorption_thermal = 0
+water_absorption_thermal = 0.655

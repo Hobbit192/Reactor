@@ -160,7 +160,7 @@ while running:
             elif isinstance(nuclei_grid[column][row], Xenon):
                 pygame.draw.circle(screen, PURPLE, (nuclei_x, nuclei_y), nucleus_diameter // 2)
 
-            new_fuel = random.randint(1, 5000)
+            new_fuel = random.randint(1, 100)
             xenon_production = random.randint(1, 3000)
             delayed_emission = random.randint(1, 10000)
 
@@ -193,6 +193,19 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                pygame.quit()
+                sys.exit()
+
+            if event.key == pygame.K_SPACE:
+                if time_delta == clock.tick(60) / 1000:
+                    time_delta = 0
+                    print(time_delta)
+
+                if time_delta == 0:
+                    time_delta = clock.tick(60) / 1000
+
     keys = pygame.key.get_pressed()
 
     if keys[pygame.K_DOWN]:
@@ -204,7 +217,7 @@ while running:
             rod.descend(max(rod.descent - 1, 0))
 
     elif keys[pygame.K_w]:
-        flow_rate = min(0.05, flow_rate + 0.001)
+        flow_rate = min(0.1, flow_rate + 0.001)
         print(flow_rate)
 
     elif keys[pygame.K_s]:
@@ -246,9 +259,9 @@ while running:
 
             if separation.magnitude() < nucleus_diameter / 2 + neutron.sprite.pixel_radius:
                 if isinstance(nuclei_grid[neutron_column][neutron_row], FuelRod) and chance(100):
-                    # FISSION EVENT
+                    # ------------------------- FISSION EVENT ----------------------------------------------------------
                     nuclei_grid[neutron_column][neutron_row] = FissionProduct(
-                        nuclei_grid[neutron_column][neutron_row].temperature + 100)
+                        nuclei_grid[neutron_column][neutron_row].temperature + 1000)
 
                     neutrons.remove(neutron)
                     neutron.sprite.kill()
