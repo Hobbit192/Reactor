@@ -2,7 +2,7 @@ import pygame
 import sys
 import random
 
-from constants import alpha, h, e, WHITE, GREY, BLUE, LIGHT_BLUE, PURPLE, \
+from constants import alpha, h, q_e, WHITE, GREY, BLUE, LIGHT_BLUE, PURPLE, \
     delayed_neutron_decay, square_size, gap, row_height, column_width, rod_width, width, height, \
     total_columns, total_rows, start_x, start_y, rod_height, fast_speed, slow_speed, coolant_inflow_temp, \
     RED, min_temp, max_temp, desaturation
@@ -129,7 +129,7 @@ def temperature_to_colour(temp):
 
 
 def eV_to_J(energy):
-    return energy * e
+    return energy * q_e
 
 
 # ------------------------------------- Main loop ----------------------------------------------------------------------
@@ -160,7 +160,7 @@ while running:
             elif isinstance(nuclei_grid[column][row], Xenon):
                 pygame.draw.circle(screen, PURPLE, (nuclei_x, nuclei_y), nucleus_diameter // 2)
 
-            new_fuel = random.randint(1, 100)
+            new_fuel = random.randint(1, 5000)
             xenon_production = random.randint(1, 3000)
             delayed_emission = random.randint(1, 10000)
 
@@ -217,7 +217,7 @@ while running:
             rod.descend(max(rod.descent - 1, 0))
 
     elif keys[pygame.K_w]:
-        flow_rate = min(0.1, flow_rate + 0.001)
+        flow_rate = min(0.15, flow_rate + 0.001)
         print(flow_rate)
 
     elif keys[pygame.K_s]:
@@ -261,7 +261,7 @@ while running:
                 if isinstance(nuclei_grid[neutron_column][neutron_row], FuelRod) and chance(100):
                     # ------------------------- FISSION EVENT ----------------------------------------------------------
                     nuclei_grid[neutron_column][neutron_row] = FissionProduct(
-                        nuclei_grid[neutron_column][neutron_row].temperature + 1000)
+                        nuclei_grid[neutron_column][neutron_row].temperature + 1500)
 
                     neutrons.remove(neutron)
                     neutron.sprite.kill()
