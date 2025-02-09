@@ -27,11 +27,15 @@ The probability of a certain nuclear event occuring is determined by a nuclear c
 ```math
 \Sigma = N \cdot \sigma,
 ```
-where $\Sigma$ is the macroscopic cross section and $N$ is the number of target nuclei per unit volume. The probability of the event occuring is then determined with the formula:
+where $\Sigma$ is the macroscopic cross section and $N$ is the number of target nuclei per unit volume (atomic number density). The probability of the event occuring is then determined with the formula:
 ```math
 P = 1 - e^{- \Sigma x}
 ```
-where $x$ is the distance travelled through the material. This formula is based on the **exponential attenuation law** and the fall-off of neutron intensity, $I = I_0 e^{- \Sigma x}$[^2].
+where $x$ is the distance travelled through the material. This formula is based on the **exponential attenuation law** and the fall-off of neutron intensity, $I = I_0 e^{- \Sigma x}$[^2]. Since the simulation models large groups of particles acting together, we can simplify this to comparing the cross sections as follows:
+```math
+P = \frac{\Sigma}{\Sigma + \Sigma \prime}
+```
+where $\Sigma$ is the macroscopic cross section of the relevant interaction and $\Sigma \prime$ is the macroscopic cross section of all other competing interactions. The simulation assumes that all movement through the nuclei circles results in a collision; in reality, it is possible for the neutrons to move through the material without colliding, the chance for which is based on the atomic number density of the material and total macroscopic cross section.
 
 The following cross sections are used in this project:
 - U-235
@@ -39,6 +43,8 @@ The following cross sections are used in this project:
   - Fission (fast neutrons): $1 b$[^2]
   - Absorption by radiative capture (thermal neutrons): $98 b$[^3]
   - Absorption by radiative capture (fast neutrons): $0.15 b$[^3]
+  - Total cross section (thermal neutrons): $698.9 b$
+  - Total cross section (fast neutrons): $5.894 b$
 - Xe-135
   - Absorption by radiative capture (thermal neutrons): $2,778,000 b$[^4]
   - Absorption by radiative capture (fast neutrons): $40 b$[^4]
