@@ -3,15 +3,17 @@ import pygame
 
 pygame.init()
 
-h = 0.01
+h = 0.004
 alpha = 0.1
-e = 1.602176634e-19
+q_e = 1.602176634e-19
 coolant_inflow_temp = 260
 min_temp = 260
 desaturation = 0.46
 max_temp = 295
 m_neutron = 1.674927471e-27
 number = 10e18
+e = 2.718281828459045
+barn_scale = 1e-24
 
 fission_energy = 195e6
 fission_heat = fission_energy * number * 0.9
@@ -59,12 +61,50 @@ LIGHT_BLUE = (124, 180, 184)
 PURPLE = (87, 70, 123)
 
 # Cross-sections
-u235_fission_thermal = 585.1
-u235_fission_fast = 1
-u235_absorption_thermal = 98
-u235_absorption_fast = 0.15
+micro_cs = {
+    "u235": {
+        "thermal_f": 585.1,
+        "thermal_a": 98,
+        "thermal_t": 698.9,
+        "fast_f": 1,
+        "fast_a": 0.15,
+        "fast_t": 5.894
+    },
+    "xe135": {
+        "thermal_a": 2778000,
+        "thermal_t": 3110000,
+        "fast_a": 40,
+        "fast_t": 100
+    },
+    "water": {
+        "thermal_a": 0.3326
+    }
+}
 
-xe135_absorption_thermal = 2778000
-xe135_absorption_fast = 40
+n_density = {
+    "u235": 1e22,
+    "xe135": 3e13,
+    "water": 1e23
+}
 
-water_absorption_thermal = 0.655
+macro_cs = {}
+
+for element, data in micro_cs.items():
+    macro_cs[element] = {}
+    for key, value in data.items():
+        macro_cs[element][key] = value * n_density[element]
+
+# Probabilities
+
+p_thermal_f = macro_cs["u235"]["thermal_f"]/macro_cs["u235"]["thermal_t"]
+p_thermal_a = macro_cs["u235"]["thermal_a"]/macro_cs["u235"]["thermal_t"]
+
+p_fast_f = macro_cs["u235"]["fast_f"]/macro_cs["u235"]["fast_t"]
+p_fast_a = macro_cs["u235"]["fast_a"]/macro_cs["u235"]["fast_t"]
+
+p_thermal_xe135_a =(macro_cs["xe135"]["thermal_a"])/macro_cs["xe135"]["thermal_t"]
+p_fast_xe135_a =(macro_cs["xe135"]["fast_a"])/macro_cs["xe135"]["fast_t"]
+
+p_water_a = 1 - (e ** (-macro_cs["water"]["thermal_a"] * barn_scale))
+
+print(p_thermal_xe135_a)
