@@ -96,15 +96,19 @@ for element, data in micro_cs.items():
 
 # Probabilities
 
-p_thermal_f = macro_cs["u235"]["thermal_f"]/macro_cs["u235"]["thermal_t"]
-p_thermal_a = macro_cs["u235"]["thermal_a"]/macro_cs["u235"]["thermal_t"]
+probability = {
+    "u235": {
+        "thermal_f": macro_cs["u235"]["thermal_f"] / macro_cs["u235"]["thermal_t"],
+        "thermal_a": macro_cs["u235"]["thermal_a"] / macro_cs["u235"]["thermal_t"],
+        "fast_f": macro_cs["u235"]["fast_f"] / macro_cs["u235"]["fast_t"],
+        "fast_a": macro_cs["u235"]["fast_a"] / macro_cs["u235"]["fast_t"]
+    },
+    "xe135": {
+        "thermal_a": macro_cs["xe135"]["thermal_a"] / macro_cs["xe135"]["thermal_t"],
+        "fast_a": macro_cs["xe135"]["fast_a"] / macro_cs["xe135"]["fast_t"]
+    },
+    "water": {
+        "thermal_a": 1 - (e ** (-macro_cs["water"]["thermal_a"] * barn_scale))
+    }
+}
 
-p_fast_f = macro_cs["u235"]["fast_f"]/macro_cs["u235"]["fast_t"]
-p_fast_a = macro_cs["u235"]["fast_a"]/macro_cs["u235"]["fast_t"]
-
-p_thermal_xe135_a =(macro_cs["xe135"]["thermal_a"])/macro_cs["xe135"]["thermal_t"]
-p_fast_xe135_a =(macro_cs["xe135"]["fast_a"])/macro_cs["xe135"]["fast_t"]
-
-p_water_a = 1 - (e ** (-macro_cs["water"]["thermal_a"] * barn_scale))
-
-print(p_thermal_xe135_a)
