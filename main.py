@@ -5,7 +5,7 @@ import random
 from constants import alpha, h, q_e, WHITE, GREY, BLUE, LIGHT_BLUE, PURPLE, \
     delayed_neutron_decay, square_size, gap, row_height, column_width, rod_width, width, height, \
     total_columns, total_rows, start_x, start_y, rod_height, fast_speed, slow_speed, coolant_inflow_temp, \
-    RED, min_temp, max_temp, desaturation
+    RED, min_temp, max_temp, desaturation, probability
 from nuclei import Coolant, neutrons, all_sprites_list, FuelRod, FissionProduct, Neutron, Xenon, ControlRod, Moderator
 from vectors import Vector
 
@@ -68,6 +68,8 @@ for moderator in range(total_moderators):
 
     moderators.append(Moderator(screen, Vector(moderator_x, moderator_y)))
 
+xe135_n = 2000
+u235_n = 3000
 
 def heat_transfer(i, j):
     current_temp = coolant_grid[i][j].temperature
@@ -101,8 +103,8 @@ def heat_transfer(i, j):
     return new_temp
 
 
-def chance(percentage):
-    return random.randint(1, 100) <= percentage
+def chance(p: float) -> bool:
+    return random.random() < p
 
 
 def temperature_to_colour(temp):
@@ -160,8 +162,6 @@ while running:
             elif isinstance(nuclei_grid[column][row], Xenon):
                 pygame.draw.circle(screen, PURPLE, (nuclei_x, nuclei_y), nucleus_diameter // 2)
 
-            new_fuel = random.randint(1, 5000)
-            xenon_production = random.randint(1, 3000)
             delayed_emission = random.randint(1, 10000)
 
             if isinstance(nuclei_grid[column][row], FissionProduct):
@@ -172,10 +172,10 @@ while running:
                                               fast=True)
                     neutrons.append(delayed_neutron)
 
-                if new_fuel == 1:
+                if chance(1 / u235_n):
                     nuclei_grid[column][row] = FuelRod(coolant_inflow_temp)
 
-                elif xenon_production == 1:
+                elif chance(1 / xe135_n):
                     nuclei_grid[column][row] = Xenon(nuclei_grid[column][row].temperature)
 
     # Control rod drawing
@@ -210,11 +210,11 @@ while running:
 
     if keys[pygame.K_DOWN]:
         for rod in control_rods:
-            rod.descend(min(rod.descent + 1, 100))
+            rod.descend(min(rod.descent + 0.25, 100))
 
     elif keys[pygame.K_UP]:
         for rod in control_rods:
-            rod.descend(max(rod.descent - 1, 0))
+            rod.descend(max(rod.descent - 0.25, 0))
 
     elif keys[pygame.K_w]:
         flow_rate = min(0.15, flow_rate + 0.001)
@@ -223,6 +223,21 @@ while running:
     elif keys[pygame.K_s]:
         flow_rate = max(0, flow_rate - 0.001)
         print(flow_rate)
+
+    elif keys[pygame.K_e]:
+        u235_n += 10
+
+    elif keys[pygame.K_q]:
+        u235_n = 300
+
+    elif keys[pygame.K_1]:
+        u235_n = 100
+
+    elif keys[pygame.K_d]:
+        xe135_n += 100
+
+    elif keys[pygame.K_a]:
+        xe135_n = 1250
 
     # Game state updates
     # Heat transfer
@@ -257,30 +272,50 @@ while running:
 
             separation = neutron.position - nucleus_position
 
+            # Collision
             if separation.magnitude() < nucleus_diameter / 2 + neutron.sprite.pixel_radius:
-                if isinstance(nuclei_grid[neutron_column][neutron_row], FuelRod) and chance(100):
-                    # ------------------------- FISSION EVENT ----------------------------------------------------------
-                    nuclei_grid[neutron_column][neutron_row] = FissionProduct(
-                        nuclei_grid[neutron_column][neutron_row].temperature + 1500)
+                if isinstance(nuclei_grid[neutron_column][neutron_row], FuelRod):
+                    if ((not neutron.fast and chance(probability["u235"]["thermal_f"]))
+                            or (neutron.fast and chance(probability["u235"]["fast_f"]))):
+                        # ------------------------- FISSION EVENT ------------------------------------------------------
+                        nuclei_grid[neutron_column][neutron_row] = FissionProduct(
+                            nuclei_grid[neutron_column][neutron_row].temperature + 1500)
 
-                    neutrons.remove(neutron)
-                    neutron.sprite.kill()
-                    click.play()
+                        neutrons.remove(neutron)
+                        neutron.sprite.kill()
+                        click.play()
 
-                    for i in range(3):
-                        angle = random.randint(0, 360)
-                        new_neutron = Neutron(nucleus_position, Vector(200, 200).rotate(angle), True)
-                        neutrons.append(new_neutron)
+                        for i in range(3):
+                            angle = random.randint(0, 360)
+                            new_neutron = Neutron(nucleus_position, Vector(200, 200).rotate(angle), True)
+                            neutrons.append(new_neutron)
 
-                    continue
+                        continue
 
-                elif isinstance(nuclei_grid[neutron_column][neutron_row], Xenon) and chance(100):
-                    nuclei_grid[neutron_column][neutron_row] = FissionProduct(
-                        nuclei_grid[neutron_column][neutron_row].temperature)
+                    elif ((not neutron.fast and chance(probability["u235"]["thermal_a"]))
+                            or (neutron.fast and chance(probability["u235"]["fast_a"]))):
+                        # Absorption
+                        neutrons.remove(neutron)
+                        neutron.sprite.kill()
+                        continue
 
-                    neutrons.remove(neutron)
-                    neutron.sprite.kill()
-                    continue
+                elif isinstance(nuclei_grid[neutron_column][neutron_row], Xenon):
+                    if ((not neutron.fast and chance(probability["xe135"]["thermal_a"]))
+                            or (neutron.fast and chance(probability["xe135"]["fast_a"]))):
+                        nuclei_grid[neutron_column][neutron_row] = FissionProduct(
+                            nuclei_grid[neutron_column][neutron_row].temperature)
+
+                        neutrons.remove(neutron)
+                        neutron.sprite.kill()
+                        continue
+
+            # Absorption
+            elif not neutron.fast and chance(probability["water"]["thermal_a"]):
+                coolant_grid[neutron_column][neutron_row].temperature += 15
+
+                neutrons.remove(neutron)
+                neutron.sprite.kill()
+                continue
 
         for control_rod in control_rods:
             if neutron.collision_check(control_rod):
@@ -299,8 +334,6 @@ while running:
 
     all_sprites_list.draw(screen)
     pygame.display.flip()
-
     #print(len(neutrons))
-
 pygame.quit()
 sys.exit()
