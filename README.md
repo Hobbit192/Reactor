@@ -1,4 +1,6 @@
 # Simulation of an RBMK Nuclear Fission Reactor
+![image](https://github.com/user-attachments/assets/8789eb52-c73b-4b9f-a59e-8d7a019a8d4f)
+
 ## How to use the program
 ### Keybindings
 
