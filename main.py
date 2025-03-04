@@ -334,6 +334,6 @@ while running:
 
     all_sprites_list.draw(screen)
     pygame.display.flip()
-    #print(len(neutrons))
+    print(len(neutrons))
 pygame.quit()
 sys.exit()
