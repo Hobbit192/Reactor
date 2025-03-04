@@ -17,6 +17,8 @@ pygame.mixer.init()
 screen = pygame.display.set_mode((width, height))
 coolant_surface = pygame.Surface((width, height))
 pygame.display.set_caption("Nuclear Reactor")
+icon = pygame.image.load("reactor.ico")
+pygame.display.set_icon(icon)
 
 # Load sound
 click = pygame.mixer.Sound("Click.mp3")
