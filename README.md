@@ -1,11 +1,30 @@
 # Simulation of an RBMK Nuclear Fission Reactor
+![image](https://github.com/user-attachments/assets/8789eb52-c73b-4b9f-a59e-8d7a019a8d4f)
+
 ## How to use the program
-WIP
+### Keybindings
+
+| Keybindings | |
+| --- | --- |
+| Up arrow key | Move control rods up |
+| Down arrow key | Move control rods down |
+| W | Increase the coolant inflow rate |
+| S | Decrease the coolant inflow rate |
+| E | Decrease the proportion of U-235 in the core |
+| D | Decrease the proportion of Xe-125 in the core |
+| A | Sets Xe-135 level to a high number |
+| Q | Sets U-235 level to a high number |
+| 1 | Sets U-235 level to an even higher number |
+
+Pressing **A** will poison the core with xenon to speed up the actual xenon poisoning process which would happen anyway.
+> [!CAUTION]
+> Pressing **Q** or **1** will cause a reactor meltdown by flooding the core with fissile U-235
+
 ## Methodology
 ### Fission, Fuel Rods and Neutrons
-Fission is modelled at a macroscopic scale in order to represent the reactivity of the reactor as a whole. The coolant grid of squares has a grid of circles overlaid on top of it, with each circle representing a large amount of nuclei all acting together. This circle is coloured differently depending on whether the nuclei are uranium, the daughter nuclei of fission or xenon. The daughter nuclei are all coloured the same and for simplicity, the decay heating produced by the decay of daughter nuclei is ignored. This might be added at a later date, as it would allow simulation of the Fukushima and Three Mile Island accidents.
+Fission is modelled at a macroscopic scale in order to represent the reactivity of the reactor as a whole. The coolant grid of squares has a grid of circles overlaid on top of it, with each circle representing a large amount of nuclei all acting together. This circle is coloured differently depending on whether the nuclei are uranium-235, the daughter nuclei of fission or xenon. The daughter nuclei are all coloured the same and for simplicity, the decay heating produced by the decay of daughter nuclei is ignored. This might be added at a later date, as it would allow simulation of the Fukushima and Three Mile Island accidents.
 
-Neutrons are represented as smaller circles that can move continuously across the entire screen. Each neutron represents a group of neutrons, and so when a neutron collides with a uranium circle, it has the possibility of undergoing fission. This is dependent on the speed of the neutron: fast neutrons are also be modelled, and are slowed down by the graphite moderators. All neutrons produced from fission begin as fast neutrons and travel in random directions. Fast neutrons also have a greater heating effect on the water, although they can be moderated and slowed down by the water until they become thermal neutrons. Fast neutrons have a much lower chance of inducing fission.
+Neutrons are represented as smaller circles that can move continuously across the entire screen. Each neutron represents a group of neutrons, and so when a neutron collides with a uranium circle, it has the possibility of undergoing fission. In order to estimate the number of particles each circle represents, it is necessary to know how many neutrons are undergoing fission in the reactor per second, which is approximately $10^{20}$[^8]. Assuming that in our reactor, roughly 100 neutrons are present per second, the scaling factor $N$ is $10^{18}$.This is dependent on the speed of the neutron: fast neutrons are also be modelled, and are slowed down by the graphite moderators. All neutrons produced from fission begin as fast neutrons and travel in random directions. Fast neutrons also have a greater heating effect on the water, although they can be moderated and slowed down by the water until they become thermal neutrons. Fast neutrons have a much lower chance of inducing fission.
 
 ### Delayed Neutrons
 Another important part of the stability of nuclear reactors are delayed neutrons. Most neutrons in a reactor are released immediately after induced fission, but some of them are released as a result of the deacy of the neutron-rich fission daughter products, which are usually actinides. Most of these decay by beta decay, but some decay by direct neutron emission. These delayed neutrons contribute to the reactivity of the reactor: most reactors are said to be in a *prompt subcritical, delayed critical* state, where the prompt neutrons emitted from fission alone are not enough to sustain the chain reaction, but the delayed neutrons make up the difference. However, this does make it more difficult to reduce the fission rate, as lowering the control rods will not stop delayed neutron emission.
@@ -83,11 +102,7 @@ T(i, j) = T(i, j) - \dot{F} (T_{i,j} - T_{in})
 ```
 The value of $\dot{F}$ can be varied by the user.
 
-The last consideration is the heating produced by the **moderation and absorbtion of neutrons**. For this the energies of thermal and fast neutrons are used: $0.025 \ eV$ for a thermal neutron[^6] and $2 \ MeV$ for a fast neutron[^7].In an RBMK reactor, graphite is the primary moderator, but light water also serves to slow down and absorb neutrons. In this simulation, the chance for a thermal neutron to be absorbed is assumed to be fixed, although in reality it is dependent on the speed of the neutron. As thermal neutron collisions result in a minimal energy transfer to the coolant, they are ignored, and all of the energy of the thermal neutron is transferred to the square that it is absorbed by. The energy of the neutron is then converted to heat using the equation:
-```math
-T(i, j) = T(i, j) + N \cdot \frac{E_{neutron}}{m_{coolant} \cdot C_p},
-```
-where N is the number of neutrons represented, functioning as a scaling factor for the heating. In order to estimate this, it is necessary to know how many neutrons are undergoing fission in the reactor per second, which is approximately $10^{20}$[^8]. Assuming that in our reactor, roughly 100 neutrons are present per second, the scaling factor $N$ is $10^{18}$. This equation assumes 100% efficient energy transfer from kinetic energy of the neutron to thermal energy in the coolant. 
+The last consideration is the heating produced by the **moderation and absorbtion of neutrons**. For this the energies of thermal and fast neutrons are used: $0.025 \ eV$ for a thermal neutron[^6] and $2 \ MeV$ for a fast neutron[^7].In an RBMK reactor, graphite is the primary moderator, but light water also serves to slow down and absorb neutrons. In this simulation, the chance for a thermal neutron to be absorbed is assumed to be fixed, although in reality it is dependent on the speed of the neutron. This chance is calculated based off the water absorption cross section, and assumes that each square of water in the simulation is $1m$ in width. As thermal neutron collisions result in a minimal energy transfer to the coolant, they are ignored, and all of the energy of the thermal neutron is transferred to the square that it is absorbed by. The energy of the neutron is then converted to heat by choosing a value for simulation balance. This is in realistic proportion to the energy released by fission.
 
 A larger portion of the energy released by neutron capture is the gamma emission which results from the de-excitation of the nuclues after capturing a neutron. For light water, the hydrogen becomes deuterium and releases a $2.2 \ MeV$ gamma ray. The energy of this gamma ray is transferred to the water through three processes: the ejection of electrons from water molecules (the photoelectric effect), Compton scattering - in which the gamma ray transfers part of its energy to electrons in the water, which further ionize and excite other molecules - and pair production. In the simulation, the energy is simply all transferred as heat energy to the water.
 
@@ -95,7 +110,7 @@ The energy transferred by **moderation of fast neutrons** follows a different pr
 ```math
 N \approx \frac{ln(E_{fast}/E_{thermal})}{\xi}
 ```
-which gives $N \approx 18$ using the energy values above. For balance, this is decreased to SOME NUMBER of collisions in the simulation.
+which gives $N \approx 18$ using the energy values above. For balance, this is decreased to SOME NUMBER of collisions in the simulation (this hasn't been added yet).
 
 As a final addition, logic is added to make the water evaporate once it reaches $295^oC$. RBMK reactors used water at a very high pressure and at $260^oC$[^9], as it was more thermally efficient at removing heat from the reactor. This also increased the boiling point of the water, allowing the reactor as a whole to operate at a higher temperature. For the coolant, this means it can no longer absorb or moderate neutrons, as it is now much less dense, and so the absorption cross-section is effectively zero. Its temperature is still recorded, as it could cool down with the addition of new water from the pumps.
 
